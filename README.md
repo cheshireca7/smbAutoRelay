@@ -1,5 +1,4 @@
-**DISCLAIMER**: I AM NOT RESPONSIBLE OF THE MISUSE OF THIS TOOL. YOU RUN IT AT YOUR OWN RISK. PLEASE BE KIND :)                                         
-  Before running the tool, make sure you are in a controlled environment, and where you are allowed to perform this kind of exercise.
+**DISCLAIMER**: I AM NOT RESPONSIBLE OF THE MISUSE OF THIS TOOL. YOU RUN IT AT YOUR OWN RISK. Before running the tool, make sure you are in a controlled environment, and where you are allowed to perform this kind of exercise. PLEASE BE KIND :)
 
 # SMB AutoRelay
   SMB AutoRelay provides the automation of SMB/NTLM Relay technique for pentesting and red teaming exercises in active directory environments.

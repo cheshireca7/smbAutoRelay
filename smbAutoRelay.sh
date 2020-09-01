@@ -222,7 +222,7 @@ function relayingAttack(){
   elif [ $terminal == "termite" ];then
     termite -hold -e "$command" &>/dev/null &
   else
-    echo -e "${redColour}[D:]$endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
+    echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
   fi
 
   terminal_nc_PID=$!

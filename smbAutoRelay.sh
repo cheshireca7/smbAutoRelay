@@ -230,7 +230,7 @@ function relayingAttack(){
     if [[ $? -eq 0 && "$ps" != "tmux" ]];then terminal=$ps; break; fi
   done
 
-  command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport; exit 0'"
+  command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport && exit 0'"
   if [ $terminal == "gnome" ];then
     gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
     terminal_nc_PID=!$

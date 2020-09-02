@@ -238,7 +238,7 @@ function relayingAttack(){
     termite -hold -e "$command" &>/dev/null &
     terminal_nc_PID=!$
   else
-    xterm -hold -e "$command" &>/dev/null &
+    xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
     terminal_nc_PID=!$
   fi
 

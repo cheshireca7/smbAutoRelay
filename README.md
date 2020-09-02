@@ -3,7 +3,7 @@
 # SMB AutoRelay
   SMB AutoRelay provides the automation of SMB/NTLM Relay technique for pentesting and red teaming exercises in active directory environments.
 
-  ![alt text](https://github.com/chesire-cat/smbAutoRelay/blob/master/images/hm.png?raw=true)
+  ![alt text](https://github.com/chesire-cat/smbAutoRelay/blob/master/images/help.png?raw=true)
   
 ## Usage
   Syntax: `./smbAutoRelay.sh -i <interface> -t <pathToTargetsFile>`. 

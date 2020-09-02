@@ -6,7 +6,7 @@
   ![alt text](https://github.com/chesire-cat/smbAutoRelay/blob/master/images/help.png?raw=true)
   
 ## Usage
-  Syntax: `./smbAutoRelay.sh -i <interface> -t <pathToTargetsFile>`. 
+  Syntax: `./smbAutoRelay.sh -i <interface> -t <file>`. 
   
   Example: `./smbAutoRelay.sh -i eth0 -t ./targets.txt`.
   
@@ -32,5 +32,5 @@
   - net-tools
   
 ## TODOs
-  - [ ] Add the possibility to capture and crack the NetNTLM hash.
+  - [ ] Add the possibility to capture and crack the NetNTLM hashes.
   - [ ] Addapt it to use terminal profiles

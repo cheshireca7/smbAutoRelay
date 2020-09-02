@@ -288,13 +288,14 @@ function rmsw(){
 
   if [ "$confirm" == "y" ];then
     if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
+    
     while read line; do
       if [ "$line" == "responder" ];then
         rm -rf $(pwd)/responder &>/dev/null
       elif [ "$line" == "impacket" ];then
       	python3 -m pip uninstall impacket &>/dev/null
         rm -rf $(pwd)/impacket &>/dev/null
-      elif [ "${line:0:1}" != "#" ];then
+      elif [[ ${line:0:1} != '#' ]];then
         apt remove -y $line &>/dev/null
       fi
       if [ $? -ne 0 ];then
@@ -314,9 +315,9 @@ function rmsw(){
 banner
 
 if [ ! -e $(pwd)/uninstall.txt ];then
-	echo -e "# ########## IMPORTANT! ##########\n#\n# This file was created automatically by smbAutoRelay.sh\n" >> uninstall.txt
-	echo -e "# Here it will store the programs installed in case they are not found in this machine\n" >> uninstall.txt
-	echo -e "# Be aware that if removed, smbAutoRelay.sh will suppose there is nothing to uninstall. Try to not delete this file\n\n" >>uninstall.txt
+	echo -e "# ############################## IMPORTANT! ##############################\n#\n# This file was created automatically by smbAutoRelay.sh" >> uninstall.txt
+	echo -e "# Here it will store the programs installed in case they are not found in this machine" >> uninstall.txt
+	echo -e "# Be aware that if removed, smbAutoRelay.sh will suppose there is nothing to uninstall.\n# Try to not delete this file\n" >> uninstall.txt
 fi
 
 if [ "$(id -u)" == 0 ]; then

@@ -33,4 +33,4 @@
   
 ## TODOs
   - [ ] Add the possibility to capture and crack the NetNTLM hash.
-  - [ ] Fix weird issues
+  - [ ] Addapt it to use terminal profiles

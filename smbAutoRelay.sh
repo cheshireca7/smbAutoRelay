@@ -290,7 +290,7 @@ function rmsw(){
     if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
     
     while read line; do
-	    if [[ ${line:0:1} != '#' ]];then
+	    if [[ ${line:0:1} != '#' && $line -ne '' ]];then
 		      if [ "$line" == "responder" ];then
 			rm -rf $(pwd)/responder &>/dev/null
 		      elif [ "$line" == "impacket" ];then

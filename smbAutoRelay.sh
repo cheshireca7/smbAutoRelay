@@ -65,16 +65,20 @@ function checkApt(){
 	
 	which $program &>/dev/null
 	if [ $? -eq 0 ];then
+		if [ "$program" == "ifconfig" ];then program=""net-tools"; fi
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $program installed\n";sleep 0.5; fi
 	else
+		if [ "$program" == "ifconfig" ];then program=""net-tools"; fi
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $program not installed, installing..."; sleep 0.5; fi
 		apt install -y $program &>/dev/null
 		
 		which $program &>/dev/null
 		if [ $? -eq 0 ];then
+			if [ "$program" == "ifconfig" ];then program=""net-tools"; fi
 			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $program installed\n"; sleep 0.5; fi
             echo "$program" >> $(pwd)/uninstall.txt
 		else
+			if [ "$program" == "ifconfig" ];then program=""net-tools"; fi
 			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $program could not be installed. Exiting...\n"; sleep 0.5
 			tput cnorm; exit 1
 		fi

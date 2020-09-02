@@ -63,7 +63,7 @@ function helpMenu(){
 }
 
 function isNetTools(){
-	if [ "$1" == "ifconfig" ];then return 0 fi
+	if [ "$1" == "ifconfig" ];then return 0; fi
 }
 
 function checkApt(){

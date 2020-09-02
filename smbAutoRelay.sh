@@ -59,18 +59,17 @@ function helpMenu(){
 }
 
 function checkApt(){
+
+	if [ "$1" == "net-tools" ];then $1 == "ifconfig"; fi
+	
 	which $1 &>/dev/null
 	if [ $? -eq 0 ];then
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n";sleep 0.5; fi
 	else
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $1 not installed, installing..."; sleep 0.5; fi
 		apt install -y $1 &>/dev/null
-		if [ "$1" == "net-tools" ];then
-			which ifconfig &>/dev/null
-		else
-			which $1 &>/dev/null
-		fi
-		
+		which $1 &>/dev/null
+
 		if [ $? -eq 0 ];then
 			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:S]${endColour} $1 installed\n"; sleep 0.5; fi
             echo "$1" >> $(pwd)/uninstall.txt

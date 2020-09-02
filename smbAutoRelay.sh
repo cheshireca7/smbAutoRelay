@@ -103,15 +103,15 @@ function checkProgramsNeeded(){
 	
 	test -f $(pwd)/responder/Responder.py &>/dev/null
 	if [ $? -eq 0 ]; then
-        	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder installed\n"; sleep 0.5; fi
+        	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
         	makeBck
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder not installed, installing in '$(pwd)/responder' directory";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing in '$(pwd)/responder' directory";sleep 0.5; fi
 		mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
 		test -f $(pwd)/responder/Responder.py &>/dev/null
       		if [ $? -eq 0 ]; then
 			chmod u+x $(pwd)/responder/Responder.py
-			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 0.5; fi
+			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed!\n"; sleep 0.5; fi
         			makeBck; echo "responder" >> $(pwd)/uninstall.txt
 		else
 			echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
@@ -125,11 +125,12 @@ function checkProgramsNeeded(){
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
+		python3 -m pip install impacket &>/dev/null
         	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
 		if [ $? -eq 0 ]; then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py
-			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed succesfully!\n"; sleep 0.5; fi
+			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed!\n"; sleep 0.5; fi
 				echo "impacket" >> uninstall.txt
 		else
 			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
@@ -288,6 +289,7 @@ function rmsw(){
       if [ "$line" == "responder" ];then
         rm -rf $(pwd)/responder &>/dev/null
       elif [ "$line" == "impacket" ];then
+      	python3 -m pip uninstall impacket &>/dev/null
         rm -rf $(pwd)/impacket &>/dev/null
       else
         apt remove -y $line &>/dev/null

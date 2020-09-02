@@ -102,7 +102,7 @@ function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
 
-	programs=(tmux rlwrap python python3 netcat wget xterm net-tools)
+	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
 	test -f $(pwd)/responder/Responder.py &>/dev/null

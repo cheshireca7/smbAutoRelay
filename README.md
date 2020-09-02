@@ -25,9 +25,11 @@
   **Software which it installs through `apt` if not installed [*needed to run properly*]**
   - tmux
   - rlwrap
-  - python
   - python3
   - netcat
+  - wget 
+  - xterm 
+  - net-tools
   
 ## TODOs
   - [ ] Add the possibility to capture and crack the NetNTLM hash.

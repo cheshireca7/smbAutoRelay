@@ -239,7 +239,7 @@ function relayingAttack(){
 	echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
   fi
 
-  sleep 5
+  sleep 3
 
   portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
   while [ "$portStatus" == "LISTEN" ];do

@@ -127,7 +127,7 @@ function checkProgramsNeeded(){
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
         	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
 		if [ $? -eq 0 ]; then
-			cp $(pwd)/impacket/examples/ntlmrelay.py $(pwd)/impacket/ntlmrelayx.py
+			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py
 			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed succesfully!\n"; sleep 0.5; fi
 				echo "impacket" >> uninstall.txt

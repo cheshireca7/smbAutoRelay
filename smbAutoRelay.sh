@@ -287,7 +287,7 @@ function rmsw(){
   done
 
   if [ "$confirm" == "y" ];then
-    if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
+    echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5
     
     while read line; do
 	    if [[ ${line:0:1} != '#' && "$line" != '' ]];then

@@ -283,7 +283,7 @@ function rmsw(){
   done
 
   if [ "$confirm" == "y" ];then
-    if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Unninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
+    if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
     while read line; do
       if [ "$line" == "responder" ];then
         rm -rf $(pwd)/responder &>/dev/null

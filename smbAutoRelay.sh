@@ -145,7 +145,7 @@ function checkResponderConfig(){
     if [[ $HTTPStatus == "Off" && $SMBStatus == "Off" ]];then
       if [ ! -z $quiet ];then echo -ne ""; fi
     else
-      if [ ! -z $quiet ];thenecho -ne "\n"; fi
+      if [ ! -z $quiet ];then echo -ne "\n"; fi
     fi
 
 	if [ "$SMBStatus" == "On" ]; then

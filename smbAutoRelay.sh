@@ -62,36 +62,25 @@ function helpMenu(){
 	tput cnorm; exit 0
 }
 
-function isNetTools(){
-	if [ "$1" == "ifconfig" ];then return 0; fi
-}
-
 function checkApt(){
 
-	isNetTools $1
-	if [ $? -eq 0 ];then program="ifconfig"; fi
-
-	which $program &>/dev/null
+	if [ "$1" == "net-tools" ];then which ifconfig &>/dev/null; else which $1 &>/dev/null; fi
 	if [ $? -eq 0 ];then
-		if [ $? -eq 0 ];then program="ifconfig"; fi
-		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $program installed\n";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n";sleep 0.5; fi
 	else
-		if [ $? -eq 0 ];then program="ifconfig"; fi
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $program not installed, installing..."; sleep 0.5; fi
-		apt install -y $program &>/dev/null
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $1 not installed, installing..."; sleep 0.5; fi
+		apt install -y $1 &>/dev/null
 
-		if [ $? -eq 0 ];then program="ifconfig"; fi
-		which $program &>/dev/null
+		if [ "$1" == "net-tools" ];then which ifconfig &>/dev/null; else which $1 &>/dev/null; fi
 		if [ $? -eq 0 ];then
-			if [ $? -eq 0 ];then program="ifconfig"; fi
-			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $program installed\n"; sleep 0.5; fi
-            echo "$program" >> $(pwd)/uninstall.txt
+			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n"; sleep 0.5; fi
+            		echo "$1" >> $(pwd)/uninstall.txt
 		else
-			if [ $? -eq 0 ];then program="ifconfig"; fi
-			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $program could not be installed. Exiting...\n"; sleep 0.5
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $1 could not be installed. Exiting...\n"; sleep 0.5
 			tput cnorm; exit 1
 		fi
 	fi
+	
 }
 
 function makeBck(){

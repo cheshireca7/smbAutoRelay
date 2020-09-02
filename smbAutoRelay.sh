@@ -65,7 +65,7 @@ function checkApt(){
 	
 	which $program &>/dev/null
 	if [ $? -eq 0 ];then
-		if [ "$program" == "ifconfig" ];then program=""net-tools"; fi
+		if [ "$program" == "ifconfig" ];then program="net-tools"; fi
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $program installed\n";sleep 0.5; fi
 	else
 		if [ "$program" == "ifconfig" ];then program=""net-tools"; fi

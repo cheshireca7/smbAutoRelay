@@ -72,6 +72,7 @@ function checkApt(){
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $program not installed, installing..."; sleep 0.5; fi
 		apt install -y $program &>/dev/null
 		
+		if [ "$program" == "net-tools" ];then program="ifconfig"; fi
 		which $program &>/dev/null
 		if [ $? -eq 0 ];then
 			if [ "$program" == "ifconfig" ];then program="net-tools"; fi

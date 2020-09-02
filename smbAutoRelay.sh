@@ -53,7 +53,7 @@ function banner(){
 }
 
 function helpMenu(){
-	echo -e "${blueColour}Usage: ./smbAutoRelay.sh -i eth0 -t ./targets.txt${endColour}"
+	echo -e "${blueColour}Usage: ./smbAutoRelay.sh -i <interface> -t <file>${endColour}"
 	echo -e "\n\t${purpleColour}i) Interface to listen for NetNTLM hashes${endColour}"
     echo -e "\n\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}"
     echo -e "\n\t${purpleColour}r) Remove all installed software${endColour}"

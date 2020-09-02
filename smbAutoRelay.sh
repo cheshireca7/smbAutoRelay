@@ -292,7 +292,9 @@ function rmsw(){
   echo -ne "${redColour}[!!]${endColour} Are you sure you want to uninstall $(cat $(pwd)/uninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
 
   while [[ "$confirm" != "y" && "$confirm" != "n" ]];do
-    echo -ne "Please type y or n: ";read confirm
+    echo -e "\n"
+    echo -ne "${redColour}[!!]${endColour} Please type y (yes) or n (no): ";read confirm
+    echo -e "\n"
   done
 
   if [ "$confirm" == "y" ];then
@@ -303,7 +305,7 @@ function rmsw(){
       elif [ "$line" == "impacket" ];then
       	python3 -m pip uninstall impacket &>/dev/null
         rm -rf $(pwd)/impacket &>/dev/null
-      else
+      elif [ "${line:0:1}" != "#" ];then
         apt remove -y $line &>/dev/null
       fi
       if [ $? -ne 0 ];then
@@ -321,6 +323,13 @@ function rmsw(){
 
 # Main function
 banner
+
+if [ ! -e $(pwd)/uninstall.txt ];then
+	echo -e "# ########## IMPORTANT! ##########\n#\n# This file was created automatically by smbAutoRelay.sh\n" >> uninstall.txt
+	echo -e "# Here it will store the programs installed in case they are not found in this machine\n" >> uninstall.txt
+	echo -e "# Be aware that if removed, smbAutoRelay.sh will suppose there is nothing to uninstall. Try to not delete this file\n\n" >>uninstall.txt
+fi
+
 if [ "$(id -u)" == 0 ]; then
 	tput civis
 

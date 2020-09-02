@@ -54,7 +54,7 @@ function helpMenu(){
     echo -e "\n\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}"
     echo -e "\n\t${purpleColour}r) Remove all installed software${endColour}"
     echo -e "\n\t${purpleColour}q) Shhh! be quiet...${endColour}"
-	echo -e "\n\t${purpleColour}h) Shows this help menu${endColour}"
+	echo -e "\n\t${purpleColour}h) Shows this help menu${endColour}\n"
 	tput cnorm; exit 0
 }
 
@@ -326,7 +326,7 @@ if [ "$(id -u)" == 0 ]; then
         fi
 
         if [ ! -e $targets ]; then
-          echo -e "${redColour}[D:]${endcolour} $targets file does not exists\n"; tput cnorm; exit 1
+          echo -e "${redColour}[D:]${endColour} $targets file does not exists\n"; tput cnorm; exit 1
         else
           while read line; do
             echo $line | grep -E "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" &>/dev/null

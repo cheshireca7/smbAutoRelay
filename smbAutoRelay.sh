@@ -143,9 +143,9 @@ function checkResponderConfig(){
 	HTTPStatus=$(grep "^HTTP" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
 
     if [[ $HTTPStatus == "Off" && $SMBStatus == "Off" ]];then
-      echo -ne ""
+      if [ ! -z $quiet ];then echo -ne ""; fi
     else
-      echo -ne "\n"
+      if [ ! -z $quiet ];thenecho -ne "\n"; fi
     fi
 
 	if [ "$SMBStatus" == "On" ]; then
@@ -164,7 +164,7 @@ function checkResponderConfig(){
     fi
 
     if [[ $HTTPStatus == "Off" && $SMBStatus == "Off" ]];then
-      echo -ne "\n"
+      if [ ! -z $quiet ];then echo -ne "\n"; fi
     fi
 
 	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder SMB and HTTP servers disabled. Starting Relay Attack...\n"; sleep 0.5; fi

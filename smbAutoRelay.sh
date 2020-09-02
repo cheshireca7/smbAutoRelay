@@ -346,6 +346,7 @@ if [ "$(id -u)" == 0 ]; then
 	if [ $parameter_counter -ne 2 ]; then
 		helpMenu
 	else
+	if [ -z $quiet ];then echo -e "${yellowColour}[:x]${endColour} ...\n" ; fi
         iLookUp=$(ip addr | grep $interface | awk -F: '{print $2}' | sed 's/\s*//g')
         if [ "$interface" !=  "$iLookUp" ];then
           echo -e "${redColour}[D:]${endColour} $interface interface not found\n"; tput cnorm; exit 1

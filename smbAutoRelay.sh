@@ -295,7 +295,7 @@ function rmsw(){
       if [ $? -ne 0 ];then
         if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try manually\n"; sleep 0.5; fi
       else
-        if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line unninstaled\n"; sleep 0.5; fi
+        if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.5; fi
       fi
     done < $(pwd)/uninstall.txt
     rm -f $(pwd)/uninstall.txt

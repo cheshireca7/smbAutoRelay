@@ -290,19 +290,21 @@ function rmsw(){
     if [ ! -z $quiet ];then echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5; fi
     
     while read line; do
-      if [ "$line" == "responder" ];then
-        rm -rf $(pwd)/responder &>/dev/null
-      elif [ "$line" == "impacket" ];then
-      	python3 -m pip uninstall impacket &>/dev/null
-        rm -rf $(pwd)/impacket &>/dev/null
-      elif [[ ${line:0:1} != '#' ]];then
-        apt remove -y $line &>/dev/null
-      fi
-      if [ $? -ne 0 ];then
-        if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try manually\n"; sleep 0.5; fi
-      else
-        if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.5; fi
-      fi
+	    if [[ ${line:0:1} != '#' ]];then
+		      if [ "$line" == "responder" ];then
+			rm -rf $(pwd)/responder &>/dev/null
+		      elif [ "$line" == "impacket" ];then
+			python3 -m pip uninstall impacket &>/dev/null
+			rm -rf $(pwd)/impacket &>/dev/null
+		      else
+			apt remove -y $line &>/dev/null
+		      fi
+		      if [ $? -ne 0 ];then
+			if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try manually\n"; sleep 0.5; fi
+		      else
+			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.5; fi
+		      fi
+	    fi
     done < $(pwd)/uninstall.txt
     rm -f $(pwd)/uninstall.txt
     tput cnorm; exit 0

@@ -349,7 +349,7 @@ if [ "$(id -u)" == 0 ]; then
           echo -e "${redColour}[D:]${endColour} $targets file does not exists\n"; tput cnorm; exit 1
         else
           while read line; do
-            echo $line | grep -E "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" &>/dev/null
+            echo $line | grep -E "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" &>/dev/null
             if [ $? -ne 0 ];then
               echo -e "${redColour}[D:]${endColour} Could not read the content of $targets. Exiting...\n"
               tput cnorm; exit 1

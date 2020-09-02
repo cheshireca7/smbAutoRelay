@@ -309,7 +309,7 @@ function rmsw(){
     rm -f $(pwd)/uninstall.txt
     tput cnorm; exit 0
   else
-    tput cnorm; exit 0
+    echo; tput cnorm; exit 0
   fi
 }
 

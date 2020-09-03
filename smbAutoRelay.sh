@@ -299,8 +299,8 @@ function rmsw(){
 				if [ "$line" == "responder" ];then 
 					rm -rf $(pwd)/responder &>/dev/null
 				elif [ "$line" == "impacket" ];then
-					expect -v
 					expectInstalled=''
+					expect -v &>/dev/null
 					if [ $? -ne 0 ];then apt install -y expect &>/dev/null; expectInstalled=1; fi
 					expect -c 'spawn python3 -m pip uninstall -q impacket; expect "Proceed (y/n)?"; send "y\n"; interact' &>/dev/null
 					if [ ! -z expectInstalled ];then apt remove -y expect &>/dev/null; fi

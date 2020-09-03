@@ -26,6 +26,10 @@ grayColour="\e[0;37m\033[1m"
 trap ctrl_c INT
 
 function badExit(){
+	tmux kill-session -t 'smbautorelay*' &>/dev/null
+	if [ -e "$(pwd)/shell.ps1" ];then
+		rm -f $(pwd)/shell.ps1 &>/dev/null
+	fi
 	tput cnorm; exit 1
 }
 

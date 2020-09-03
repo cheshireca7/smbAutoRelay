@@ -164,7 +164,7 @@ function checkTargets(){
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
 	
 	while read line; do 
-		nc -nvzq 1 $line 445; if [ $? -ne 0 ];then
+		nc -nvzq 1 $line 445 |&>/dev/null; if [ $? -ne 0 ];then
 			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable. Removing from targets...\n"; sleep 0.5; fi
 		else
 			echo $line >> $(pwd)/impacket/targets.txt

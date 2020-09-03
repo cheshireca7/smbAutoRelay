@@ -179,6 +179,7 @@ function checkTargets(){
 		fi
 	done < $targets
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} There are no targets to perform the relay\n"; badExit; fi
 	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
 	mv $(pwd)/targets.tmp $targets
 

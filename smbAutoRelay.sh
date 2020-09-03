@@ -182,6 +182,9 @@ function checkTargets(){
 
 function checkResponderConfig(){
 
+    test -f $(pwd)/responder/Responder.py &>/dev/null
+    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking responder config..."; fi
 
 	SMBStatus=$(grep "^SMB" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
@@ -217,6 +220,9 @@ function checkResponderConfig(){
 
 function relayingAttack(){
 
+    which tmux &>/dev/null
+    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 
 	tmux start-server
@@ -237,7 +243,7 @@ function relayingAttack(){
 	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m && tmux swap-pane -d && sleep 1
 
     which ifconfig &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
 	openPorts=($(netstat -tunalp | grep -v 'Active\|Proto' | grep 'tcp' | awk '{print $4}' | awk -F: '{print $NF}' | sort -u | xargs))
@@ -285,6 +291,9 @@ function relayingAttack(){
 	else
         which xterm &>/dev/null
         if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} xterm not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+
+        which rlwrap &>/dev/null
+        if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} rlwrap not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
         xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
 		terminal_nc_PID=!$

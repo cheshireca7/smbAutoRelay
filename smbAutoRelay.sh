@@ -221,7 +221,7 @@ function checkResponderConfig(){
 function relayingAttack(){
 
     which tmux &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 

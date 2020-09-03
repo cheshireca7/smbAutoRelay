@@ -166,6 +166,7 @@ function checkTargets(){
 		if [ $portStatus != 'open' ];then
 			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable. Removing from targets...\n"; sleep 0.5; fi
 			grep -v "$line" $targets > $(pwd)/impacket/targets.txt
+			cp $(pwd)/impacket/targets.txt $targets
 		fi
 	done < $targets
 		

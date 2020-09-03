@@ -100,7 +100,7 @@ function makeBck(){
 
 	test -f "$(pwd)/responder/Responder.conf.old" &>/dev/null
 	if [ $? -eq 1 ];then
-		if [ ! -z $quiet ];then echo -e "\t${blueColour}[*]${endColour} Making copy of '$(pwd)/responder/Responder.conf' to '$(pwd)/responder/Responder.conf.old'\n"; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${blueColour}[:*]${endColour} Making copy of '$(pwd)/responder/Responder.conf' to '$(pwd)/responder/Responder.conf.old'\n"; sleep 0.5; fi
 		cp $(pwd)/responder/Responder.conf $(pwd)/responder/Responder.conf.old
 	fi
 	
@@ -292,18 +292,14 @@ function rmsw(){
 	done
 
 	if [ "$confirm" == "y" ];then 
-		echo -e "\n$yellowColour[!!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5
+		echo -e "\n$yellowColour[:!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5
 
 		while read line; do
 			if [[ ${line:0:1} != '#' && "$line" != '' ]];then
 				if [ "$line" == "responder" ];then 
 					rm -rf $(pwd)/responder &>/dev/null
 				elif [ "$line" == "impacket" ];then
-					expectInstalled=''
-					expect -v &>/dev/null
-					if [ $? -ne 0 ];then apt install -y expect &>/dev/null; expectInstalled=1; fi
-					expect -c 'spawn python3 -m pip uninstall -q impacket; expect "Proceed (y/n)?"; send "y\n"; interact' &>/dev/null
-					if [ ! -z expectInstalled ];then apt remove -y expect &>/dev/null; fi
+					python3 -m pip uninstall -y impacket &>/dev/null
 					rm -rf $(pwd)/impacket &>/dev/null
 				else 
 					apt remove -y $line &>/dev/null

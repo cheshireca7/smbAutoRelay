@@ -235,11 +235,11 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
 	tmux new-session -d -t "smbautorelay" &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create Tmux session 'smbautorelay'. Existing...\n"; badExit; else sleep 0.5; fi
-	tmux rename-window "smbautorelay" && tmux split-window -h &>/dev/null
+	tmux rename-window "smbautorelay" &>/dev/null && tmux split-window -h &>/dev/null
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create more panes. Kill Tmux session 'smbautorelay' and run me again\n"; badExit; else sleep 0.5; fi
 
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
-	if [ $? -ne 0 ];then let paneID+=1; tmux select-pane -t $paneID; fi
+	if [ $? -ne 0 ];then let paneID+=1; tmux select-pane -t $paneID > /dev/null 2>&1; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
 

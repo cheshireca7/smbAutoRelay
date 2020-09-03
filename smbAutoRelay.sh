@@ -282,7 +282,7 @@ function relayingAttack(){
 
 function rmsw(){
 
-	if [ ! -e $(pwd)/uninstall.txt ];then echo -e "${greenColour}[:)]${endColour} Nothing to uninstall\n"; goodExit; fi
+	if [ ! -e $(pwd)/uninstall.txt || $(grep -v '#' $(pwd)/uninstall.txt) == '' ];then echo -e "${greenColour}[:)]${endColour} Nothing to uninstall\n"; goodExit; fi
 
 	echo -ne "${redColour}[:!]${endColour} Are you sure you want to uninstall $(grep -v '#' $(pwd)/uninstall.txt | xargs | sed 's/ /, /g')? (y/n): "; read confirm
 

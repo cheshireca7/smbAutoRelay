@@ -65,14 +65,13 @@ function banner(){
 
 function helpMenu(){
 
-	echo -e "${blueColour}Usage: ./smbAutoRelay.sh -i <interface> -t <file> [-q]${endColour}"
-		echo -e "\n\t${purpleColour}i) Interface to listen for NetNTLM hashes${endColour}"
-		echo -e "\n\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}"
-		echo -e "\n\t${purpleColour}r) Remove all installed software${endColour}"
-		echo -e "\n\t${purpleColour}q) Shhh! be quiet...${endColour}"
-		echo -e "\n\t${purpleColour}h) Shows this help menu${endColour}\n"
-	
-	tput cnorm; exit 0
+	echo -e "${blueColour}Usage: ./smbAutoRelay.sh -i <interface> -t <file> [-q]${endColour}\n"
+		echo -e "\t${purpleColour}i) Interface to listen for NetNTLM hashes${endColour}\n"
+		echo -e "\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}\n"
+		echo -e "\t${purpleColour}r) Remove all installed software${endColour}\n"
+		echo -e "\t${purpleColour}q) Shhh! be quiet...${endColour}\n"
+		echo -e "\t${purpleColour}h) Shows this help menu${endColour}"
+	goodExit
 
 }
 

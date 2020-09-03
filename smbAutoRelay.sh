@@ -183,7 +183,7 @@ function checkTargets(){
 function checkResponderConfig(){
 
     test -f $(pwd)/responder/Responder.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking responder config..."; fi
 

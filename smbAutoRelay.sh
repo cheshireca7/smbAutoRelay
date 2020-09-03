@@ -141,7 +141,7 @@ function checkProgramsNeeded(){
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
-		python3 -m pip install impacket &>/dev/null
+		python3 -m pip install -q impacket &>/dev/null
         	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
 		if [ $? -eq 0 ]; then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
@@ -298,8 +298,13 @@ function rmsw(){
 			if [[ ${line:0:1} != '#' && "$line" != '' ]];then
 				if [ "$line" == "responder" ];then 
 					rm -rf $(pwd)/responder &>/dev/null
-				elif [ "$line" == "impacket" ];then 
-					python3 -m pip uninstall impacket &>/dev/null; rm -rf $(pwd)/impacket &>/dev/null
+				elif [ "$line" == "impacket" ];then
+					expect -v
+					expectInstalled=''
+					if [ $? -ne 0 ];then apt install -y expect &>/dev/null; expectInstalled=1; fi
+					expect -c 'spawn python3 -m pip uninstall -q impacket; expect "Proceed (y/n)?"; send "y\n"; interact' &>/dev/null
+					if [ ! -z expectInstalled ];then apt remove -y expect &>/dev/null; fi
+					rm -rf $(pwd)/impacket &>/dev/null
 				else 
 					apt remove -y $line &>/dev/null
 				fi

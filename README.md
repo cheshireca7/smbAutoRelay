@@ -17,7 +17,7 @@
 ##
 
   **Software which installs in the current directory [*needed to run properly*]**
-  - ![responder] (https://github.com/lgandx/Responder) 
+  - <https://github.com/lgandx/Responder>
   - ![impacket] (https://github.com/SecureAuthCorp/impacket) 
   
   **Software which installs through `apt`, if not installed [*needed to run properly*]**

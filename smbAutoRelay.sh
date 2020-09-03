@@ -170,7 +170,7 @@ function checkTargets(){
     if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
 	
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
-	
+
 	while read line; do 
 		nc -nvzq 1 $line 445 &>/dev/null; if [ $? -ne 0 ];then
 			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable.\n"; sleep 0.5; fi
@@ -178,8 +178,10 @@ function checkTargets(){
 			echo $line >> $(pwd)/impacket/targets.txt
 		fi
 	done < $targets
+
+	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[D:]${endColour} No targets available to perform the relay\n"; badExit; fi
+
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} There are no targets to perform the relay\n"; badExit; fi
 	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
 	mv $(pwd)/targets.tmp $targets
 

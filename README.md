@@ -6,15 +6,13 @@
   ![alt text](https://github.com/chesire-cat/smbAutoRelay/blob/master/images/help.png?raw=true)
   
 ## Usage
-  Syntax: `./smbAutoRelay.sh -i <interface> -t <file> [-q]`. 
+  Syntax: `./smbAutoRelay.sh -i <interface> -t <file> [-q] [-d]`. 
   
   Example: `./smbAutoRelay.sh -i eth0 -t ./targets.txt`.
   
   > Notice that the targets file should contain just the IP addresses of each target, one per line, to which you want to try the SMB/NTLM Relay technique.
   
-  To uninstall the software installed by the tool: `./smbAutoRelay.sh -r`.
-  
-  Run `./smbAutoRelay.sh [-h]` to open the help menu.
+  Run `./smbAutoRelay.sh [-h]` to see other options.
   
 ##
 

@@ -170,7 +170,8 @@ function checkTargets(){
 			echo $line >> $(pwd)/impacket/targets.txt
 		fi
 	done < $targets
-	cp $(pwd)/impacket/targets.txt $targets
+	sort -u $(pwd)/impacket/targets.txt > $targets
+	cp $targets $(pwd)/impacket/targets.txt
 		
 }
 

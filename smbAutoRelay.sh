@@ -113,7 +113,7 @@ function checkProgramsNeeded(){
 	
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
 	
-	programs=(tmux rlwrap python3 python3-pip netcat wget xterm net-tools)
+	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
 	test -f $(pwd)/responder/Responder.py &>/dev/null
@@ -141,6 +141,7 @@ function checkProgramsNeeded(){
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing in '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
 		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
+		apt install -y python3-pip &>/dev/null
 		python3 -m pip install -q impacket &>/dev/null
 		
         	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null

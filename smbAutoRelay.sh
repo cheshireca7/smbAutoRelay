@@ -70,7 +70,7 @@ function helpMenu(){
 		echo -e "\t${purpleColour}t) File path to the list of targets (IP addresses one per line)${endColour}\n"
 		echo -e "\t${purpleColour}r) Remove all installed software${endColour}\n"
 		echo -e "\t${purpleColour}q) Shhh! be quiet...${endColour}\n"
-		echo -e "\t${purpleColour}h) Shows this help menu${endColour}"
+		echo -e "\t${purpleColour}h) Shows this help menu${endColour}\n"
 	goodExit
 
 }

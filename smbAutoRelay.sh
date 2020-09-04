@@ -333,6 +333,9 @@ function relayingAttack(){
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
 	while [ "$portStatus" == "LISTEN" ];do
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
+        if [[ $(tmux select-pane -t 3 && tmux capture-pane -p | grep 'ScriptContainedMaliciousContent') -eq 0 ]];then
+          echo -e "${redColour}[:O]${endColour} Oh man, they got us! Throw this pc to the sea and run far away from here"; badExit
+        fi
 	done
 
 	rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')

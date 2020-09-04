@@ -201,7 +201,7 @@ function checkTargets(){
 		fi
 	done < $targets
 
-	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[D:]${endColour} No targets available to perform the relay\n"; badExit; fi
+	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[D:]${endColour} No targets available to perform the relaying\n"; badExit; fi
 
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
 	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
@@ -430,10 +430,9 @@ if [ "$(id -u)" == 0 ]; then
 
 		if [ ! -e $targets ]; then
 			echo -e "${redColour}[D:]${endColour} $targets file does not exists\n"; badExit
-		
-        elif [ -z "$(cat "$targets")" ];then
+		elif [ -z "$(cat "$targets")" ];then
 			echo -e "${redColour}[D:]${endColour} $targets file is empty\n"; badExit
-        else
+		else
 			while read line; do
 				echo $line | grep -E "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" &>/dev/null
 				if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Could not read the content of $targets. Exiting...\n"; badExit; fi
@@ -445,7 +444,6 @@ if [ "$(id -u)" == 0 ]; then
 		checkResponderConfig
 		relayingAttack
 	fi
-	
 	goodExit
 
 else echo -e "\n${redColour}[D:]${endColour} Super powers not activated!\n${blueColour}[:*]${endColour} You need root privileges to run this tool!"; badExit; fi

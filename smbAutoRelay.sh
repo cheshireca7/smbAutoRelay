@@ -127,13 +127,14 @@ function checkProgramsNeeded(){
 	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
-	test -f $(pwd)/responder/Responder.py &>/dev/null
-	if [ $? -eq 0 ]; then
+    if [[ "$(python3 $(pwd)/responder/Responder.py -h)" != '' ]];then
         	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
         	makeBck
 	else
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing at '$(pwd)/responder' directory";sleep 0.5; fi
-		
+
+        if [ -e $(pwd)/responder ];then rm -rf $(pwd)/responder &>/dev/null; fi
+
 		mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
 		test -f $(pwd)/responder/Responder.py &>/dev/null
       		if [ $? -eq 0 ]; then
@@ -145,17 +146,18 @@ function checkProgramsNeeded(){
 		fi
 	fi
 
-	test -f $(pwd)/impacket/examples/ntlmrelayx.py &>/dev/null
-	if [ $? -eq 0 ]; then
+    if [[ "$(python3 $(pwd)/impacket/examples/ntlmrelayx.py -h)" != '' ]];then
 		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
 	else
 		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing at '$(pwd)/impacket' directory"; sleep 0.5; fi
 		
-		mkdir $(pwd)/impacket; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
+        if [ -e $(pwd)/impacket ];then rm -rf $(pwd)/impacket &>/dev/null; fi
+
+		mkdir $(pwd)/impacket &>/dev/null; git clone https://github.com/SecureAuthCorp/impacket.git $(pwd)/impacket &>/dev/null
 		apt install -y python3-pip &>/dev/null
 		python3 -m pip install -q impacket &>/dev/null
 		
-        	test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
+        test -f "$(pwd)/impacket/examples/ntlmrelayx.py" &>/dev/null
 		if [ $? -eq 0 ]; then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py

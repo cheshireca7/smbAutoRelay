@@ -328,7 +328,7 @@ function relayingAttack(){
 	        xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
 		terminal_nc_PID=!$
 	fi
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 0.5; fi
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else sleep 3; fi
 
 	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
 	while [ "$portStatus" == "LISTEN" ];do

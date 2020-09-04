@@ -172,9 +172,9 @@ function checkProgramsNeeded(){
 function checkDependency(){
 
 	if [ "$1" == "ntlmrelayx.py" ];then
-		test -f "$(pwd)/impacket/$1" &>/dev/null
+		test -f "$(pwd)/impacket/ntlmrelayx.py" &>/dev/null
 	elif [ "$1" == "responder" ];then
-		test -f "$(pwd)/responder/$1" &>/dev/null
+		test -f "$(pwd)/responder/Responder.py" &>/dev/null
 	elif [ "$1" == "net-tools" ];then
 		which ifconfig &>/dev/null
 	else

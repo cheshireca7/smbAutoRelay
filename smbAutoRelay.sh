@@ -392,7 +392,7 @@ function rmsw(){
 }
 
 # Main function
-banner
+clear; banner
 
 if [ ! -e $(pwd)/uninstall.txt ];then
 	echo -e "# #################################### IMPORTANT! ####################################\n#\n# TRY TO NOT DELETE THIS FILE\n" >> uninstall.txt

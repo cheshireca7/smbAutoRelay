@@ -351,6 +351,8 @@ function relayingAttack(){
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
 		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null & 
 	fi
+	
+	sleep 2
 
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
 		checkDependency "xterm"; 

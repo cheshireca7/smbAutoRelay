@@ -206,7 +206,7 @@ function checkTargets(){
 		fi
 	done < $targets
 
-	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[D:]${endColour} No targets available to perform the relaying\n"; badExit; fi
+	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[:(]${endColour} No targets available to perform the relaying\n"; badExit; fi
 
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
 	mv $(pwd)/targets.tmp $(pwd)/impacket/targets.txt

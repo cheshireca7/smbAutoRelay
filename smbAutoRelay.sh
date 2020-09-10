@@ -266,7 +266,7 @@ function updateNtlmRelayxLog(){
 
 function targetStatus(){
 
-	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $NF}')
+	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log 2>/dev/null | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
 

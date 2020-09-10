@@ -258,7 +258,7 @@ function bTmux(){
 function updateNtlmRelayxLog(){
 
 	while (true);do
-		tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log
+		tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log && sleep 1
 		if [ $? -ne 0 ];then bTmux; fi
 	done
 

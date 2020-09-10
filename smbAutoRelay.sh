@@ -373,6 +373,7 @@ function relayingAttack(){
 	    terminal_nc_PID=$!
 	fi
 	
+	sleep 2
 
     if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NBT-NS request...\n"; fi
 

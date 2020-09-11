@@ -27,6 +27,7 @@ trap ctrl_c INT
 
 function cleaning(){
 
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Cleaning this mess...\n"; sleep 0.3; fi
 	tmux kill-session -t 'smbautorelay*' &>/dev/null
 	rm -f $(pwd)/shell.ps1 $(pwd)/impacket/hostsStatus.tmp $(pwd)/impacket/targets.txt &>/dev/null
 

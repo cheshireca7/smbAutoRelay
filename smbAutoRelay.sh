@@ -402,7 +402,7 @@ function relayingAttack(){
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
 			echo -e "\t${redColour}[:(]${endColour} No targets left! Go find more!\n"; break
 		fi
-		portStatus=$(netstat -tnualp | grep '/nc' | tail -1 | awk '{print $6}');
+		portStatus=$(netstat -tnualp | grep '/nc' | grep "$lport" | tail -1 | awk '{print $6}');
 	done
 
 	kill -9 $updateNtlmRelayxLog &>/dev/null

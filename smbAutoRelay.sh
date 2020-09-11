@@ -421,7 +421,7 @@ function relayingAttack(){
 		echo -e "${redColour}[:(]${endColour} Relay unsuccessful! Maybe you need more coffee\n"; badExit
 	fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'\n"; sleep 0.3; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'...\n"; sleep 0.3; fi
 	
 	goodExit
 

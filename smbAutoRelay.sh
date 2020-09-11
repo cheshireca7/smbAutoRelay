@@ -219,7 +219,7 @@ function checkTargets(){
 	done < $(pwd)/impacket/targets.txt
 
 	if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
-		echo -e "${greenColour}[:D]${endColour} Wow! You got a shell on all targets! You are a H4X0R!\n"; goodExit
+		echo -e "${greenColour}[:D]${endColour} Wow! All targets pwned! You are a truly H4X0R!\n"; goodExit
 	fi
 
 }

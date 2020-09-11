@@ -367,6 +367,8 @@ function relayingAttack(){
 	terminal_nc_PID=$! && sleep 2
     fi
 
+	sleep 2
+
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then
 		checkDependency "xterm";
 		xterm -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null &

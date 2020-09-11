@@ -64,7 +64,7 @@ function goodExit(){
 
 function ctrl_c(){
 
-	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected! Exiting...\n"; badExit
+	echo -e "\n${redColour}[D:]${endColour} Keyboard interruption detected!\n"; badExit
 
 }
 
@@ -509,7 +509,7 @@ if [ "$(id -u)" == 0 ]; then
 		else
 			while read line; do
 				echo $line | grep -E "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" &>/dev/null
-				if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Could not read the content of $targets. Exiting...\n"; badExit; fi
+				if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Could not read the content of $targets.\n"; badExit; fi
 			done < $targets
 		fi
 

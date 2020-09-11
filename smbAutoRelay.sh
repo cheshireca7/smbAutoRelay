@@ -127,7 +127,7 @@ function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.3; fi
 	which apt &>/dev/null
-	if [ $? -ne 0 ];then echo -e "${redColour}[D:]${endColour} Wait... no apt? Where are you running me?!\n"; badExit; fi
+	if [ $? -ne 0 ];then echo -e "\t${redColour}[D:]${endColour} Wait... no apt? Where are you running me?!\n"; badExit; else echo; fi
 	apt update &>/dev/null
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.3; fi

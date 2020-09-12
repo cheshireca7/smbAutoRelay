@@ -126,9 +126,8 @@ function makeBck(){
 function checkProgramsNeeded(){
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Updating apt...\n"; sleep 0.3; fi
-	which apt &>/dev/null
-	if [ $? -ne 0 ];then echo -e "\t${redColour}[D:]${endColour} Wait... no apt? Where are you running me?!\n"; badExit; fi
 	apt update &>/dev/null
+	if [ $? -ne 0 ];then echo -e "\t${redColour}[:S]${endColour} Wait... no apt? Tools needed are installed through it.\n"; fi
 
 	if [ ! -z $quiet ];then echo -e "${blueColour}[:*]${endColour} Checking for dependencies needed...\n"; sleep 0.3; fi
 

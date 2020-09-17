@@ -366,7 +366,7 @@ function relayingAttack(){
 	
 	which $terminal &>/dev/null
 	if [ $? -eq 0 ];then
-		ncCommand="rlwrap nc -lvvnp $lport"
+		ncCommand="tput setaf 7; rlwrap nc -lvvnp $lport"
 		if [ "$terminal" == "qterminal" ];then ncCommand="nc -lvvnp $lport"; fi # Kali's qterminal emulator does not like rlwrap :( 
 		
 		$terminal -e $ncCommand &>/dev/null &

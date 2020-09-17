@@ -23,6 +23,7 @@
   **Software which installs through `apt`, if not installed [*needed to run properly*]**
   - tmux
   - rlwrap
+  - python
   - python3
   - netcat
   - wget 
@@ -31,4 +32,4 @@
   
 ## TODOs
   - [ ] Add the possibility to capture and crack the NetNTLM hashes.
-  - [ ] Addapt it to use terminal profiles
+  - [x] Addapt it to use terminal profiles

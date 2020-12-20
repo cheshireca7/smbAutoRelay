@@ -40,7 +40,7 @@ function badExit(){
 	cleaning
 
     nc_PID=$(netstat -tnualp | grep '/nc' 2>/dev/null | grep 'LISTEN' 2>/dev/null | grep $lport 2>/dev/null | awk '{print substr($NF, 1, length($NF)-3)}')
-    if [ ! -z $nc_PID ];then
+    if [[ ! -z $nc_PID ]];then
 	  kill -9 $nc_PID &>/dev/null
 	  wait $nc_PID &>/dev/null
     fi
@@ -203,7 +203,7 @@ function checkTargets(){
 	if [ -e $(pwd)/impacket/targets.txt ];then rm -f $(pwd)/impacket/targets.txt &>/dev/null; fi
 
 	while read line; do 
-		nc -nvzq 1 $line 445 &>/dev/null; if [ $? -ne 0 ];then
+		nc -nvzw 1 $line 445 &>/dev/null; if [ $? -ne 0 ];then
 			if [ ! -z $quiet ];then echo -e "\t${yellowColour}[:S]${endColour} Target $line is not alive or has the SMB service disable.\n"; sleep 0.3; fi
 		else
 			echo $line >> $(pwd)/impacket/targets.txt
